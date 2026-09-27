@@ -105,3 +105,25 @@ Data validation only; these are not experiment results. Details: `docs/datasets/
 | 2026-09-27 | 2 | `uv run python scripts/build_speech_commands_manifest.py` (git refuses this checkout: dubious ownership) | Exit 1: `ProvenanceError` before validation; nothing written under `data/manifests` or `data/reports` |
 | 2026-09-27 | 2 | Same command, with process-scoped `safe.directory` (`GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0`), at clean commit `67e6570` | Exit 0 in 39.6 s: passed, 0 errors; 38,546 rows (train 30,769 · validation 3,703 · test 4,074); manifest SHA-256 `f811a20d…ab6131c` equals the pin; warnings: 1,477 `duplicate_audio_within_split_label`; sidecar `source` = `67e6570…`, `dirty: false` |
 | 2026-09-27 | 2 | Same command again, then `cmp` and `diff` against the first run's outputs | Exit 0 in 28.4 s; CSV, JSON report, and Markdown report byte-identical; sidecar identical except `created_at_utc` |
+
+## Training runs (Milestone 3)
+
+These are training records, not evaluation results. The validation loss and accuracy below were measured during training, on the validation split, and used only to select the checkpoint. The held-out test split was not loaded. The experiment-results table above stays empty until the Milestone 4 evaluation.
+
+| Run ID | Commit | Config | Seed | Manifest SHA-256 | Epochs | Best epoch (by validation loss) | Validation loss / accuracy at best | Last epoch validation loss / accuracy | Train loss / accuracy, last epoch | Parameters | Wall time | Hardware / threads |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf` | `5babe3f` (clean) | `configs/kw10_cnn_baseline.yaml` (config SHA-256 `ad8242da…a582`) | 1234 (deterministic) | `f811a20d…ab6131c` | 30 | 18 | 0.13797 / 0.96138 (3,703 examples) | 0.13908 / 0.96327 | 0.01869 / 0.99649 (30,769 examples) | 61,052 | 32 min 24 s (audio load 22.7 s; epochs 51.5–106.5 s) | AMD Ryzen 7 5800H, Windows 11, CPython 3.14.2, torch 2.14.0+cpu, 8 threads |
+
+- Checkpoints are in the git-ignored run directory `runs/20260927T210911Z_kw10-cnn-baseline_6c9d6cdf/checkpoints/`: `best.pt` (epoch 18, SHA-256 `d21f8928…d267e`, 259,243 bytes) and `last.pt` (epoch 30, SHA-256 `06037b23…cafd2`).
+- `summary.json` records rows loaded as train 30,769, validation 3,703, and test 0.
+- The best checkpoint improved at epochs 1, 2, 3, 5, 6, 8, 12, 13, and 18. After epoch 18, validation loss stayed between 0.1386 and 0.157 while train loss fell from 0.0440 to 0.0187.
+- Feature fingerprint: `8368ac49…00ba1`.
+
+### Commands (Milestone 3)
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-28 | 3 | `uv run python scripts/check.py` on the tree committed as `5babe3f` (Milestone 2 integration test included) | Format: 54 files; lint passed; mypy: no issues in 41 files; pytest: 329 passed; dist: 21-file wheel, 4 smoke tests passed; exit 0 |
+| 2026-09-28 | 3 | `uv run python scripts/train_baseline.py --config configs/kw10_cnn_baseline.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` before `start_run`; no `runs/` directory created |
+| 2026-09-28 | 3 | Same command with process-scoped `safe.directory` (`GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0`) at clean commit `5babe3f` | Exit 0 after 32 min 24 s; run `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf` as in the table above |
+| 2026-09-28 | 3 | `load_checkpoint(best.pt, expect_manifest_sha256=…, expect_labels=…, expect_window=…, expect_features=…)` via `uv run python` | Loaded: epoch 18, source `5babe3f` (clean), splits used train and validation, SHA-256 matched the sidecar |

@@ -31,7 +31,8 @@
   - `features.py`: `start_zero_pad` window (never crops), HTK log-mel with a fingerprint checked on checkpoint load; `window` and `features` config sections, both version 1.
 - [x] Implement a small PyTorch CNN and explicit training configuration.
   - `model.py` (`kws_cnn_v1`, 61,052 parameters), `TrainingConfig` (`schema_version` 1), `configs/kw10_cnn_baseline.yaml`, versioned checkpoints (`checkpoint.py`), and `training/` (manifest compatibility gate, verified audio loading, seeded loaders, training loop). See `docs/baseline.md`.
-- [ ] Train with recorded seed, manifest, configuration, dependency context, and checkpoints.
+- [x] Train with recorded seed, manifest, configuration, dependency context, and checkpoints.
+  - Run `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf` (commit `5babe3f`, seed 1234, manifest `f811a20d…`): 30 epochs, best checkpoint at epoch 18 by validation loss. `metadata.json` records provenance, seeding, and the environment; `uv.lock` pins dependencies. Details in RESULTS.md. The test split was not used.
 - [x] Add regression tests for feature and model shapes.
   - Tests cover:
     - feature shapes, determinism, filterbank values, and fingerprints;

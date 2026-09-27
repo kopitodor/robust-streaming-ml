@@ -105,6 +105,10 @@ The metadata records:
 - `checkpoints/{best,last}.{pt,json}`;
 - `summary.json`: status, best and last checkpoints with SHA-256, parameter count, layer shapes, rows loaded (test is always 0), manifest SHA-256, fingerprint, derived seeds, threads, and timings.
 
+## Recorded run
+
+The baseline run with this configuration is `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf`, from commit `5babe3f`. Its training record, including validation monitoring values, is in [RESULTS.md](../RESULTS.md#training-runs-milestone-3). No test-split number exists yet.
+
 ## Not in this milestone
 
 There is no held-out test evaluation, no calibration or confusion matrix, no robustness corruptions, no streaming inference, no ONNX export, no latency benchmark, and no demo.

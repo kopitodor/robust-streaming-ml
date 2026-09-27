@@ -125,4 +125,4 @@ Like `start_run`, training needs git to resolve the source revision.
 
 ## Status
 
-Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestone 3 (baseline training) code is in place; see `TASKS.md` and `RESULTS.md` for its status.
+Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestone 3 (baseline training) is complete: one recorded baseline run, with the test split unused (see `RESULTS.md`). Next: Milestone 4 (evaluation) in `TASKS.md`.
