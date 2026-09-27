@@ -24,12 +24,6 @@ from tests.conftest import git
 TRAIN_EXTRA = "yes/aaaaaaaa_nohash_7.wav"  # an additional train file (train speaker)
 
 
-@pytest.fixture
-def package_repo(git_repo: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
-    monkeypatch.setattr(run_dir, "PACKAGE_DIR", git_repo)
-    return git_repo
-
-
 def validate(toy: Toy, **kwargs: Any) -> ValidationResult:
     return validate_dataset(toy.spec, toy.root, toy.archive, **kwargs)
 

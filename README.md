@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), and training (`training/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -103,6 +103,26 @@ The command fails closed: on any violation it exits non-zero, removes any existi
 
 The real-data integration test (`pytest -m integration`) runs automatically when the local extraction is present, and is skipped otherwise.
 
+## Baseline training
+
+```bash
+uv run python scripts/train_baseline.py --config configs/kw10_cnn_baseline.yaml
+```
+
+This trains the 61,052-parameter log-mel CNN described in [docs/baseline.md](docs/baseline.md), using the train split, and selects checkpoints by validation loss. The test split is never loaded.
+
+Before `start_run` creates anything, it checks:
+- the config against the pinned, validated manifest, the manifest sidecar, and the validation report;
+- that the source tree is clean (`--allow-dirty-source` is for development runs only).
+
+Each run directory holds:
+- `config.yaml` and `metadata.json`;
+- `train_log.jsonl`, with one line per epoch;
+- `checkpoints/{best,last}.{pt,json}`, in the versioned format that loads with `weights_only=True`;
+- `summary.json`.
+
+Like `start_run`, training needs git to resolve the source revision.
+
 ## Status
 
-Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Next: Milestone 3 in `TASKS.md`.
+Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestone 3 (baseline training) code is in place; see `TASKS.md` and `RESULTS.md` for its status.

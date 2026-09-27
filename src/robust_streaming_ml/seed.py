@@ -12,6 +12,7 @@ silently varying.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import random
 from dataclasses import dataclass
@@ -23,6 +24,7 @@ from robust_streaming_ml.config import MAX_SEED
 
 __all__ = [
     "SeedState",
+    "derive_seed",
     "numpy_generator",
     "seed_everything",
     "torch_generator",
@@ -65,6 +67,23 @@ def seed_everything(seed: int, *, deterministic: bool = True) -> SeedState:
     torch.backends.cudnn.deterministic = deterministic
     torch.backends.cudnn.benchmark = not deterministic
     return SeedState(seed=seed, deterministic=deterministic)
+
+
+def derive_seed(seed: int, *purpose: str | int) -> int:
+    """Derive an independent, reproducible child seed for one purpose.
+
+    The child seed is the first 8 bytes (big-endian) of
+    ``SHA-256("<seed>|<purpose>|...")`` reduced modulo 2**32, so each source of
+    randomness (model init, shuffling, augmentation per epoch and sample, ...)
+    gets its own stream that does not depend on how much any other stream was
+    consumed.
+    """
+    _check_seed(seed)
+    if not purpose:
+        raise ValueError("derive_seed needs at least one purpose component")
+    text = "|".join(str(part) for part in (seed, *purpose))
+    digest = hashlib.sha256(text.encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big") % (MAX_SEED + 1)
 
 
 def numpy_generator(seed: int) -> np.random.Generator:

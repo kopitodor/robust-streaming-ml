@@ -9,7 +9,7 @@ dataset, feature, model, and evaluation sections.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeVar, overload
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -18,6 +18,7 @@ __all__ = [
     "ConfigError",
     "ExperimentConfig",
     "RunConfig",
+    "StrictModel",
     "load_config",
     "parse_config",
 ]
@@ -31,11 +32,13 @@ class ConfigError(ValueError):
     """Raised when a configuration file cannot be read or fails validation."""
 
 
-class _StrictModel(BaseModel):
+class StrictModel(BaseModel):
+    """Base for configuration sections: unknown keys and type coercion are rejected."""
+
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
 
-class RunConfig(_StrictModel):
+class RunConfig(StrictModel):
     """Where and how run artifacts are written."""
 
     output_root: Path = Field(
@@ -46,7 +49,7 @@ class RunConfig(_StrictModel):
     )
 
 
-class ExperimentConfig(_StrictModel):
+class ExperimentConfig(StrictModel):
     """Top-level experiment configuration."""
 
     name: str = Field(
@@ -67,20 +70,35 @@ class ExperimentConfig(_StrictModel):
         return self.model_dump(mode="json")
 
 
-def parse_config(data: Any, *, source: str = "<config>") -> ExperimentConfig:
-    """Validate an already-parsed mapping as an :class:`ExperimentConfig`."""
+ConfigT = TypeVar("ConfigT", bound=ExperimentConfig)
+
+
+@overload
+def parse_config(data: Any, *, source: str = ...) -> ExperimentConfig: ...
+@overload
+def parse_config(data: Any, *, source: str = ..., schema: type[ConfigT]) -> ConfigT: ...
+def parse_config(
+    data: Any, *, source: str = "<config>", schema: type[ExperimentConfig] = ExperimentConfig
+) -> ExperimentConfig:
+    """Validate an already-parsed mapping as ``schema`` (default :class:`ExperimentConfig`)."""
     if not isinstance(data, dict):
         raise ConfigError(
             f"{source}: top-level configuration must be a mapping, got {type(data).__name__}"
         )
     try:
-        return ExperimentConfig.model_validate(data)
+        return schema.model_validate(data)
     except ValidationError as exc:
         raise ConfigError(f"{source}: invalid configuration\n{exc}") from exc
 
 
-def load_config(path: str | Path) -> ExperimentConfig:
-    """Load and validate a YAML configuration file."""
+@overload
+def load_config(path: str | Path) -> ExperimentConfig: ...
+@overload
+def load_config(path: str | Path, *, schema: type[ConfigT]) -> ConfigT: ...
+def load_config(
+    path: str | Path, *, schema: type[ExperimentConfig] = ExperimentConfig
+) -> ExperimentConfig:
+    """Load and validate a YAML configuration file as ``schema``."""
     path = Path(path)
     try:
         text = path.read_text(encoding="utf-8")
@@ -90,4 +108,4 @@ def load_config(path: str | Path) -> ExperimentConfig:
         data = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         raise ConfigError(f"{path}: invalid YAML: {exc}") from exc
-    return parse_config(data, source=str(path))
+    return parse_config(data, source=str(path), schema=schema)

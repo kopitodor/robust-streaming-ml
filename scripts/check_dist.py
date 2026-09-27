@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = "robust_streaming_ml"
 REQUIRED_WHEEL_FILES = {
     f"{PACKAGE}/__init__.py",
+    f"{PACKAGE}/checkpoint.py",
     f"{PACKAGE}/config.py",
     f"{PACKAGE}/data/__init__.py",
     f"{PACKAGE}/data/acquisition.py",
@@ -39,9 +40,15 @@ REQUIRED_WHEEL_FILES = {
     f"{PACKAGE}/data/speech_commands.py",
     f"{PACKAGE}/data/validation.py",
     f"{PACKAGE}/data/wav.py",
+    f"{PACKAGE}/features.py",
+    f"{PACKAGE}/model.py",
     f"{PACKAGE}/py.typed",
     f"{PACKAGE}/run_dir.py",
     f"{PACKAGE}/seed.py",
+    f"{PACKAGE}/training/__init__.py",
+    f"{PACKAGE}/training/config.py",
+    f"{PACKAGE}/training/data.py",
+    f"{PACKAGE}/training/loop.py",
 }
 LOCATION_CHECK = """
 import sys, sysconfig

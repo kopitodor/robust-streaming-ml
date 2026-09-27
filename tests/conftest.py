@@ -57,3 +57,12 @@ def git_repo(tmp_path: Path) -> Path:
     git(repo, "add", "fixture.txt")
     git_commit_all(repo, "fixture")
     return repo
+
+
+@pytest.fixture
+def package_repo(git_repo: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Make the temporary repository stand in for the package source (for provenance)."""
+    from robust_streaming_ml import run_dir
+
+    monkeypatch.setattr(run_dir, "PACKAGE_DIR", git_repo)
+    return git_repo

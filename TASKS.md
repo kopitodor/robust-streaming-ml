@@ -27,10 +27,19 @@
 
 ## 3. Baseline training
 
-- [ ] Implement versioned log-mel feature extraction and fixed-window policy.
-- [ ] Implement a small PyTorch CNN and explicit training configuration.
+- [x] Implement versioned log-mel feature extraction and fixed-window policy.
+  - `features.py`: `start_zero_pad` window (never crops), HTK log-mel with a fingerprint checked on checkpoint load; `window` and `features` config sections, both version 1.
+- [x] Implement a small PyTorch CNN and explicit training configuration.
+  - `model.py` (`kws_cnn_v1`, 61,052 parameters), `TrainingConfig` (`schema_version` 1), `configs/kw10_cnn_baseline.yaml`, versioned checkpoints (`checkpoint.py`), and `training/` (manifest compatibility gate, verified audio loading, seeded loaders, training loop). See `docs/baseline.md`.
 - [ ] Train with recorded seed, manifest, configuration, dependency context, and checkpoints.
-- [ ] Add regression tests for feature and model shapes.
+- [x] Add regression tests for feature and model shapes.
+  - Tests cover:
+    - feature shapes, determinism, filterbank values, and fingerprints;
+    - model shapes and the pinned parameter count;
+    - checkpoint round trip and every rejection path;
+    - config validation;
+    - the manifest gate, test-split refusal, and batches that don't depend on worker count;
+    - synthetic end-to-end runs: artifacts, reproducibility, and fail-closed paths.
 
 ## 4. Evaluation and calibration
 
