@@ -13,10 +13,12 @@
 
 ## 2. Dataset acquisition and validation
 
-- [ ] Select one public, license-supported dataset; record source, version, license, attribution, and access procedure.
+- [x] Select one public dataset and define the data contract (planning only; nothing downloaded).
+  - Speech Commands v2 (`v0.02`), 10 labels, official validation/test lists; `_silence_`/`_unknown_` out of scope. See `docs/decisions/0001-dataset-speech-commands-v2.md` and `docs/data-contract.md`.
+- [ ] Verify and record source, version, archive SHA-256, license text, and attribution from the actual download (data contract section 1); blocks all later Milestone 2 tasks.
 - [ ] Implement acquisition without committing data.
-- [ ] Generate a manifest with file identity, label, provenance, and checksum fields.
-- [ ] Validate audio readability, label coverage, duplicates, grouping constraints, and disjoint splits.
+- [ ] Generate the manifest CSV and JSON sidecar exactly per the data contract schema (section 7), deterministically.
+- [ ] Implement the contract's validation rules (sections 2–6) with tests on small synthetic fixtures: format/duration, labels, split-list handling, duplicates, and speaker leakage.
 
 ## 3. Baseline training
 
