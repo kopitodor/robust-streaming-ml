@@ -2,6 +2,7 @@
 
 Supporting protocol notes, dataset license records, demo instructions, and reproducibility reports will live here.
 
+- [evaluation-protocol.md](evaluation-protocol.md): protocol `kw10-clean-eval-v1`. It defines the gates, test isolation, metric definitions (zero-division policy, 15-bin ECE), temperature scaling fitted on validation only, the duplicate policy, and the outputs.
 - [baseline.md](baseline.md): the Milestone 3 baseline: window and log-mel features, CNN shapes and parameter count, training procedure, determinism, checkpoint format, and run layout.
 - [data-contract.md](data-contract.md): Speech Commands v2 10-keyword data contract (source, license verification fields, splits, validation rules, manifest schema). Planning; not yet implemented.
 - [datasets/speech_commands_v0.02.md](datasets/speech_commands_v0.02.md): verification record for the downloaded archive (checksums, license, attribution, structural cross-checks).

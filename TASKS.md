@@ -44,11 +44,15 @@
 
 ## 4. Evaluation and calibration
 
-- [ ] Implement accuracy, macro F1, confusion matrix, ECE, and NLL.
+- [x] Implement accuracy, macro F1, confusion matrix, ECE, and NLL.
+  - `evaluation/metrics.py`, defined in `docs/evaluation-protocol.md` §5: zero-division gives 0, the confusion matrix uses a fixed label order, NLL is computed from float64 log-softmax, and ECE is top-label with 15 equal-width bins.
 - [ ] Add validation/test evaluation reports and prediction artifacts.
-- [ ] Implement and document a calibration procedure if justified by validation data.
-- [ ] Verify metrics against fixed fixtures.
-- [ ] Decide and document how evaluation treats within-split duplicate audio. The test split has 119 groups covering 240 files, i.e. 121 redundant copies (see `docs/datasets/speech_commands_v0.02.md`). The manifest keeps them all.
+- [x] Implement and document a calibration procedure if justified by validation data.
+  - Temperature scaling (`evaluation/calibration.py`): a golden-section search on validation NLL over `β = 1/T` in [0.05, 20], fitted only on validation (any other split is refused) and persisted in `calibration.json` with compatibility metadata. Raw and calibrated results are always both reported; the fitted value is in RESULTS.md.
+- [x] Verify metrics against fixed fixtures.
+  - `tests/test_metrics.py`: hand-computed confusion matrix, accuracy, per-class and macro F1, zero division, NLL, and ECE (including bin edges).
+- [x] Decide and document how evaluation treats within-split duplicate audio. The test split has 119 groups covering 240 files, i.e. 121 redundant copies (see `docs/datasets/speech_commands_v0.02.md`). The manifest keeps them all.
+  - Decision (`docs/evaluation-protocol.md` §7): the official result retains every row. A secondary view that keeps one row per `audio_sha256` (the smallest path) is reported separately and never replaces it.
 
 ## 5. Robustness suite
 

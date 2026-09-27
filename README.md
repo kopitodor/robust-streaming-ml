@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), and training (`training/`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), and evaluation and calibration (`evaluation/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -122,6 +122,29 @@ Each run directory holds:
 - `summary.json`.
 
 Like `start_run`, training needs git to resolve the source revision.
+
+## Evaluation
+
+```bash
+uv run python scripts/evaluate_baseline.py --config configs/kw10_cnn_baseline_eval.yaml
+```
+
+This runs protocol `kw10-clean-eval-v1` ([docs/evaluation-protocol.md](docs/evaluation-protocol.md)) on the pinned Milestone 3 checkpoint.
+
+Before `start_run`, it checks:
+- the pinned checkpoint SHA-256 and its compatibility;
+- that the checkpoint came from a clean tree whose commit is an ancestor of HEAD, and that it agrees with the training run's metadata;
+- the validated-manifest gate;
+- that the source tree is clean.
+
+It then predicts on validation, fits temperature scaling on validation only, and writes `calibration.json`. Only then does it predict on test, and it computes accuracy, macro F1, the confusion matrix, NLL, and 15-bin ECE, raw and calibrated.
+
+It writes to the new run directory:
+- `predictions/*.csv`, from which every aggregate can be regenerated;
+- `calibration.json`;
+- `report.json`, `report.md`, and `summary.json`.
+
+A duplicate-content sensitivity view is reported separately and never replaces the official result.
 
 ## Status
 

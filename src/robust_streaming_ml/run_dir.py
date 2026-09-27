@@ -48,6 +48,7 @@ __all__ = [
     "RunDirectory",
     "SourceRevision",
     "collect_environment_metadata",
+    "commit_is_ancestor_of_head",
     "config_digest",
     "current_source_revision",
     "resolve_source_revision",
@@ -103,6 +104,30 @@ def config_digest(config: ExperimentConfig) -> str:
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
+def _run_git(source_dir: Path, *args: str) -> str:
+    """Run git in ``source_dir``; raise :class:`ProvenanceError` with git's diagnostic."""
+    try:
+        completed = subprocess.run(
+            [_GIT_EXECUTABLE, *args],
+            cwd=source_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or "").strip() or f"exit status {exc.returncode}"
+        raise ProvenanceError(
+            f"cannot resolve source revision in {source_dir}: "
+            f"`git {' '.join(args)}` failed:\n{detail}"
+        ) from exc
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ProvenanceError(
+            f"cannot resolve source revision in {source_dir}: cannot run git: {exc}"
+        ) from exc
+    return completed.stdout
+
+
 def resolve_source_revision(source_dir: Path = PACKAGE_DIR) -> SourceRevision:
     """Return the commit and dirty state of the repository containing ``source_dir``.
 
@@ -115,26 +140,7 @@ def resolve_source_revision(source_dir: Path = PACKAGE_DIR) -> SourceRevision:
     """
 
     def git(*args: str) -> str:
-        try:
-            completed = subprocess.run(
-                [_GIT_EXECUTABLE, *args],
-                cwd=source_dir,
-                capture_output=True,
-                text=True,
-                check=True,
-                timeout=30,
-            )
-        except subprocess.CalledProcessError as exc:
-            detail = (exc.stderr or exc.stdout or "").strip() or f"exit status {exc.returncode}"
-            raise ProvenanceError(
-                f"cannot resolve source revision in {source_dir}: "
-                f"`git {' '.join(args)}` failed:\n{detail}"
-            ) from exc
-        except (OSError, subprocess.SubprocessError) as exc:
-            raise ProvenanceError(
-                f"cannot resolve source revision in {source_dir}: cannot run git: {exc}"
-            ) from exc
-        return completed.stdout
+        return _run_git(source_dir, *args)
 
     commit = git("rev-parse", "--verify", "HEAD^{commit}").strip()
     if not _COMMIT_PATTERN.fullmatch(commit):
@@ -152,6 +158,32 @@ def resolve_source_revision(source_dir: Path = PACKAGE_DIR) -> SourceRevision:
 def current_source_revision() -> SourceRevision:
     """Revision of the running code: the repository containing this package."""
     return resolve_source_revision(PACKAGE_DIR)
+
+
+def commit_is_ancestor_of_head(commit: str) -> bool:
+    """Whether ``commit`` exists in this package's repository and is HEAD or an ancestor.
+
+    Raises :class:`ProvenanceError` if ``commit`` is malformed, unknown to the
+    repository, or git cannot be run.
+    """
+    if not _COMMIT_PATTERN.fullmatch(commit):
+        raise ProvenanceError(f"not a full commit id: {commit!r}")
+    _run_git(PACKAGE_DIR, "cat-file", "-e", f"{commit}^{{commit}}")
+    try:
+        subprocess.run(
+            [_GIT_EXECUTABLE, "merge-base", "--is-ancestor", commit, "HEAD"],
+            cwd=PACKAGE_DIR,
+            capture_output=True,
+            check=True,
+            timeout=30,
+        )
+    except subprocess.CalledProcessError as exc:
+        if exc.returncode == 1:
+            return False
+        raise ProvenanceError(f"git merge-base failed for {commit}: {exc.stderr!r}") from exc
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ProvenanceError(f"cannot run git: {exc}") from exc
+    return True
 
 
 def _package_version(name: str) -> str | None:

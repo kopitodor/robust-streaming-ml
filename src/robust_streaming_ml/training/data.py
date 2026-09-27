@@ -41,7 +41,12 @@ from robust_streaming_ml.data.validation import DatasetSpec
 from robust_streaming_ml.data.wav import WavError, parse_wav
 from robust_streaming_ml.features import WindowError, apply_window
 from robust_streaming_ml.seed import derive_seed, torch_generator
-from robust_streaming_ml.training.config import AugmentationSection, TrainingConfig
+from robust_streaming_ml.training.config import (
+    AugmentationSection,
+    DataSection,
+    TrainingConfig,
+    WindowSection,
+)
 
 __all__ = [
     "TRAINING_SPLITS",
@@ -51,9 +56,11 @@ __all__ = [
     "SplitAudio",
     "ValidatedManifest",
     "WaveformDataset",
+    "check_manifest_inputs",
     "load_split_audio",
     "load_validated_manifest",
     "make_loader",
+    "read_split_audio",
     "seed_worker",
     "time_shift",
 ]
@@ -94,7 +101,13 @@ def load_validated_manifest(config: TrainingConfig, spec: DatasetSpec) -> Valida
 
     Raises :class:`DataCompatibilityError` without side effects on any mismatch.
     """
-    data = config.data
+    return check_manifest_inputs(config.data, config.window, spec)
+
+
+def check_manifest_inputs(
+    data: DataSection, window: WindowSection, spec: DatasetSpec
+) -> ValidatedManifest:
+    """The manifest compatibility gate shared by training and evaluation."""
 
     def fail(message: str) -> DataCompatibilityError:
         return DataCompatibilityError(f"{data.manifest_path}: {message}")
@@ -110,13 +123,11 @@ def load_validated_manifest(config: TrainingConfig, spec: DatasetSpec) -> Valida
         )
     if list(spec.labels) != data.labels:
         raise fail(f"config labels {data.labels} != dataset labels {list(spec.labels)}")
-    if config.window.sample_rate_hz != spec.sample_rate_hz:
+    if window.sample_rate_hz != spec.sample_rate_hz:
+        raise fail(f"window sample rate {window.sample_rate_hz} != dataset {spec.sample_rate_hz}")
+    if window.num_samples < spec.max_frames:
         raise fail(
-            f"window sample rate {config.window.sample_rate_hz} != dataset {spec.sample_rate_hz}"
-        )
-    if config.window.num_samples < spec.max_frames:
-        raise fail(
-            f"window holds {config.window.num_samples} samples but clips may have "
+            f"window holds {window.num_samples} samples but clips may have "
             f"{spec.max_frames}; cropping is not allowed"
         )
 
@@ -181,7 +192,7 @@ class SplitAudio:
         return len(self.relative_paths)
 
 
-def _read_row(audio_root: Path, row: ManifestRow, config: TrainingConfig) -> np.ndarray:
+def _read_row(audio_root: Path, row: ManifestRow, window: WindowSection) -> np.ndarray:
     path = audio_root / row.relative_path
     data = path.read_bytes()
     if hashlib.sha256(data).hexdigest() != row.sha256:
@@ -194,12 +205,12 @@ def _read_row(audio_root: Path, row: ManifestRow, config: TrainingConfig) -> np.
     expected = (row.sample_rate_hz, row.num_channels, row.sample_format, row.num_frames)
     if observed != expected:
         raise DataIntegrityError(f"{row.relative_path}: audio {observed} != manifest {expected}")
-    if wav.sample_rate_hz != config.window.sample_rate_hz:
+    if wav.sample_rate_hz != window.sample_rate_hz:
         raise DataIntegrityError(
             f"{row.relative_path}: {wav.sample_rate_hz} Hz; resampling is not allowed"
         )
     try:
-        return apply_window(wav.samples_int16(), config.window)
+        return apply_window(wav.samples_int16(), window)
     except WindowError as exc:
         raise DataIntegrityError(f"{row.relative_path}: {exc}") from exc
 
@@ -210,11 +221,24 @@ def load_split_audio(manifest: ValidatedManifest, split: str, config: TrainingCo
         raise DataCompatibilityError(
             f"split {split!r} cannot be loaded for training; the test split is held out"
         )
+    return read_split_audio(manifest, split, config.data, config.window)
+
+
+def read_split_audio(
+    manifest: ValidatedManifest, split: str, data: DataSection, window: WindowSection
+) -> SplitAudio:
+    """Read, verify against the manifest, and window every file of ``split``.
+
+    Callers enforce which splits they may use (training: train/validation;
+    evaluation: validation/test).
+    """
+    if split not in SPLITS:
+        raise DataCompatibilityError(f"unknown split {split!r}")
     rows = manifest.rows_for(split)
     label_index = {label: i for i, label in enumerate(manifest.labels)}
-    root = config.data.audio_root
-    with ThreadPoolExecutor(max_workers=config.data.load_workers) as pool:
-        arrays = list(pool.map(lambda r: _read_row(root, r, config), rows))
+    root = data.audio_root
+    with ThreadPoolExecutor(max_workers=data.load_workers) as pool:
+        arrays = list(pool.map(lambda r: _read_row(root, r, window), rows))
     waveforms = torch.from_numpy(np.stack(arrays)) if arrays else torch.empty(0, 0)
     labels = torch.tensor([label_index[r.label] for r in rows], dtype=torch.int64)
     return SplitAudio(
