@@ -45,3 +45,16 @@ Observation (superseded by the review-fix rows below): with the Milestone 1 code
 | Run ID | Model/runtime | CPU/hardware | OS | Threads | Window/hop | Warm-up | Timed iterations | Batch size | p50 ms | p95 ms | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | | | | | | | | | | | | |
+
+### Provenance source lock and distribution check
+
+Added tool version: hatchling 1.32.4 (locked, dev group). uv 0.12.13 and CPython 3.14.2 as above.
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-27 | 1 | `uv lock` then `uv sync` | Lock updated with hatchling 1.32.4 and its dependencies; environment synced |
+| 2026-09-27 | 1 | `uv lock --check` | Exit 0; 40 packages resolved |
+| 2026-09-27 | 1 | `uv run python scripts/check_dist.py` with `src/robust_streaming_ml/py.typed` temporarily moved away (negative control) | Wheel built; failed with "wheel is missing files: ['robust_streaming_ml/py.typed']"; exit 1; file restored afterwards |
+| 2026-09-27 | 1 | `uv run python scripts/check.py` | Format: 21 files already formatted; lint: all checks passed; mypy: no issues in 12 source files; pytest: 78 passed; dist: wheel built offline (8 files), installed into a temporary environment, imported from that environment's site-packages, 4 import smoke tests passed; exit 0 |
+| 2026-09-27 | 1 | `start_run(load_config("configs/example.yaml"), root=<scratch dir>)` in this checkout via `uv run python` | Raised `ProvenanceError` with git's "detected dubious ownership" diagnostic; exit 1 |
+| 2026-09-27 | 1 | Same call with process-scoped `safe.directory` (`GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_0`/`GIT_CONFIG_VALUE_0`) | Succeeded; recorded `source.commit` = `2fe501c9e9387445cbf3023150fb3c4e6fe15785` (HEAD at the time) and `dirty: true` (these changes were uncommitted) |

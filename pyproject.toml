@@ -23,9 +23,13 @@ dependencies = [
 ]
 
 [dependency-groups]
+# Installed next to the built wheel in the isolated distribution check.
+smoke = ["pytest>=8.0"]
 dev = [
+  { include-group = "smoke" },
+  # Locked build backend so scripts/check_dist.py can build without network.
+  "hatchling>=1.25",
   "mypy>=1.10",
-  "pytest>=8.0",
   "ruff>=0.5",
   "types-PyYAML>=6.0",
 ]

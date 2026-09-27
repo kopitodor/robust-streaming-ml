@@ -5,9 +5,9 @@
 - [x] Configure package metadata, supported Python versions, formatting, linting, type checking, and test runner.
   - hatchling package with `py.typed`; `requires-python >= 3.10` (only 3.14.2 verified so far); ruff (format + lint), mypy (strict, pydantic plugin), pytest; `uv.lock` with CPU-only PyTorch index.
 - [x] Add a minimal import test and CI-ready local commands.
-  - `tests/test_import.py`; `scripts/check.py` runs all checks and exits non-zero on failure. No CI workflow file is added yet.
+  - `tests/test_import.py`; `scripts/check.py` runs all checks and exits non-zero on failure. `scripts/check_dist.py` builds the wheel offline, installs it into an isolated temporary environment with the locked dependencies, and runs the import smoke tests there. No CI workflow file is added yet.
 - [x] Define configuration schema and deterministic seed utility.
-  - `config.py` (strict YAML schema, `ConfigError`), `seed.py` (`seed_everything`, `numpy_generator`, `torch_generator`), `run_dir.py` (`start_run`: resolves git provenance or fails with `ProvenanceError`, applies and verifies seeding, then writes `config.yaml` + `metadata.json`), with unit tests including temporary-git-repository provenance tests.
+  - `config.py` (strict YAML schema, `ConfigError`), `seed.py` (`seed_everything`, `numpy_generator`, `torch_generator`), `run_dir.py` (`start_run`: resolves git provenance from the package's own source directory only, or fails with `ProvenanceError`, applies and verifies seeding, then writes `config.yaml` + `metadata.json`), with unit tests including temporary-git-repository provenance tests.
 - [x] Document environment setup and artifact-directory conventions.
   - See README sections "Environment setup", "Development commands", and "Artifact-directory conventions".
 

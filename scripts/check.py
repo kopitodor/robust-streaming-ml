@@ -1,4 +1,4 @@
-"""Run every repository check: formatting, linting, type checking, tests.
+"""Run every repository check: format, lint, types, tests, distribution.
 
 Usage: ``python scripts/check.py`` (from the repository root, inside the dev
 environment, e.g. ``uv run python scripts/check.py``). Exits non-zero if any
@@ -9,20 +9,23 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
+PY = sys.executable
 CHECKS: list[tuple[str, list[str]]] = [
-    ("format", ["ruff", "format", "--check", "."]),
-    ("lint", ["ruff", "check", "."]),
-    ("types", ["mypy"]),
-    ("tests", ["pytest"]),
+    ("format", [PY, "-m", "ruff", "format", "--check", "."]),
+    ("lint", [PY, "-m", "ruff", "check", "."]),
+    ("types", [PY, "-m", "mypy"]),
+    ("tests", [PY, "-m", "pytest"]),
+    ("dist", [PY, str(Path(__file__).with_name("check_dist.py"))]),
 ]
 
 
 def main() -> int:
     failed: list[str] = []
     for name, args in CHECKS:
-        print(f"==> {name}: {' '.join(args)}", flush=True)
-        if subprocess.run([sys.executable, "-m", *args], check=False).returncode != 0:
+        print(f"==> {name}: {' '.join(args[1:])}", flush=True)
+        if subprocess.run(args, check=False).returncode != 0:
             failed.append(name)
     if failed:
         print(f"FAILED: {', '.join(failed)}")

@@ -3,7 +3,9 @@
 :func:`start_run` is the single entry point for beginning a run. In order, it
 
 1. resolves the source revision (git commit and dirty state) of the code
-   being run, failing with :class:`ProvenanceError` if git cannot provide it;
+   being run -- always from this package's own directory, never from a
+   caller-chosen path -- failing with :class:`ProvenanceError` if git cannot
+   provide it or the package files are not tracked by that repository;
 2. applies seeding with :func:`~robust_streaming_ml.seed.seed_everything` and
    verifies the resulting process state;
 3. creates a fresh directory ``<output_root>/<run_id>/`` containing
@@ -11,7 +13,9 @@
    identity, config hash, source revision, applied seed state, environment).
 
 There is no revision override: a run whose code revision cannot be resolved
-is not started. Run directories are never reused.
+is not started. A non-editable install (e.g. a wheel in site-packages) has no
+repository revision, so runs must use an editable install of a git checkout.
+Run directories are never reused.
 """
 
 from __future__ import annotations
@@ -53,7 +57,8 @@ CONFIG_FILENAME = "config.yaml"
 METADATA_FILENAME = "metadata.json"
 METADATA_SCHEMA_VERSION = 2
 
-# Directory whose repository revision identifies the code being run.
+# Directory whose repository revision identifies the code being run. Tests
+# may monkeypatch it; there is deliberately no public parameter to override it.
 PACKAGE_DIR = Path(__file__).resolve().parent
 
 _GIT_EXECUTABLE = "git"
@@ -100,9 +105,12 @@ def config_digest(config: ExperimentConfig) -> str:
 def resolve_source_revision(source_dir: Path = PACKAGE_DIR) -> SourceRevision:
     """Return the commit and dirty state of the repository containing ``source_dir``.
 
-    ``dirty`` is true if any tracked file is modified or any untracked,
-    non-ignored file exists. Raises :class:`ProvenanceError`, including git's
-    diagnostic, if the revision cannot be resolved.
+    ``source_dir`` must contain files tracked by that repository; otherwise the
+    commit would not identify its code (for example, a package installed into
+    an ignored virtual environment inside some checkout). ``dirty`` is true if
+    any tracked file is modified or any untracked, non-ignored file exists.
+    Raises :class:`ProvenanceError`, including git's diagnostic, if the
+    revision cannot be resolved.
     """
 
     def git(*args: str) -> str:
@@ -130,6 +138,12 @@ def resolve_source_revision(source_dir: Path = PACKAGE_DIR) -> SourceRevision:
     commit = git("rev-parse", "--verify", "HEAD^{commit}").strip()
     if not _COMMIT_PATTERN.fullmatch(commit):
         raise ProvenanceError(f"git returned an unexpected commit id: {commit!r}")
+    if not git("ls-files", "--", ".").strip():
+        raise ProvenanceError(
+            f"cannot resolve source revision in {source_dir}: it contains no files "
+            "tracked by the enclosing git repository, so that repository's commit "
+            "does not identify this code (use an editable install of a git checkout)"
+        )
     dirty = bool(git("status", "--porcelain").strip())
     return SourceRevision(commit=commit, dirty=dirty)
 
@@ -207,14 +221,12 @@ def start_run(
     *,
     root: Path | None = None,
     run_id: str | None = None,
-    source_dir: Path = PACKAGE_DIR,
 ) -> RunDirectory:
     """Start a run: resolve provenance, apply seeding, and create its directory.
 
     ``root`` defaults to ``config.run.output_root``. ``run_id`` defaults to
-    ``<UTC timestamp>_<config name>_<random suffix>``. ``source_dir`` selects
-    the repository whose revision is recorded; it defaults to this package's
-    source directory.
+    ``<UTC timestamp>_<config name>_<random suffix>``. The recorded revision
+    is always that of the repository containing this package's source.
 
     Raises :class:`ProvenanceError` (before seeding or creating anything) if
     the source revision cannot be resolved, and ``FileExistsError`` if the
@@ -231,7 +243,7 @@ def start_run(
     if path.exists():
         raise FileExistsError(f"run directory already exists: {path}")
 
-    source = resolve_source_revision(source_dir)
+    source = resolve_source_revision(PACKAGE_DIR)
     seeding = _apply_seeding(config)
     run_metadata: dict[str, Any] = {
         "schema_version": METADATA_SCHEMA_VERSION,

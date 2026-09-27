@@ -31,7 +31,7 @@ python -m pip install -e . --group dev
 
 ## Development commands
 
-Run all checks (format, lint, type check, tests); exits non-zero if any fails:
+Run all checks (format, lint, type check, tests, distribution); exits non-zero if any fails:
 
 ```bash
 uv run python scripts/check.py
@@ -46,13 +46,19 @@ Individual commands:
 | Lint | `uv run ruff check .` |
 | Type check | `uv run mypy` |
 | Tests | `uv run pytest` |
+| Distribution | `uv run python scripts/check_dist.py` |
+
+The distribution check needs `uv` on PATH and runs offline from the local uv cache populated by `uv sync`. It:
+1. builds the wheel with the locked `hatchling` (`--no-build-isolation`) and checks its contents;
+2. creates a fresh temporary environment containing only the locked runtime dependencies and pytest, then installs the wheel into it;
+3. confirms `robust_streaming_ml` is imported from that environment's site-packages, then runs `tests/test_import.py` there.
 
 ## Configuration, seeds, and run directories
 
 - Configurations are YAML files validated by `robust_streaming_ml.config.load_config`. Unknown keys, wrong types, and out-of-range values raise `ConfigError`. See `configs/example.yaml`.
 - `robust_streaming_ml.seed.seed_everything(seed, deterministic=True)` seeds Python, NumPy, and PyTorch and enables deterministic PyTorch algorithms. `numpy_generator` and `torch_generator` return explicitly seeded, independent generators.
 - `robust_streaming_ml.run_dir.start_run(config)` is the single entry point for starting a run; every training, evaluation, corruption, or benchmark entry point must begin with it. In order, it:
-  1. resolves the git commit and dirty state of the repository containing the package source;
+  1. resolves the git commit and dirty state of the repository containing the imported package's own source directory. Callers cannot choose a different directory, and the package files must be tracked by that repository. Runs therefore require an editable install of a git checkout (the default with `uv sync`). A non-editable install, such as a wheel in site-packages, fails with `ProvenanceError`, even when that environment sits inside a checkout;
   2. calls `seed_everything(config.seed, deterministic=config.deterministic)` and verifies the resulting PyTorch/cuDNN/environment state matches the configuration;
   3. creates the run directory and writes `config.yaml` and `metadata.json`.
 - **Unavailable-revision policy: fail.** If git cannot resolve the revision (not a repository, no commits, git not installed, or git refusing the repository, e.g. "dubious ownership"), `start_run` raises `ProvenanceError` containing git's diagnostic. This happens before seeding or creating any directory. There is no manual revision override. Fix the git problem (for "dubious ownership", follow git's printed `safe.directory` instruction) and rerun.
