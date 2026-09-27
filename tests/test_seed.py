@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import random
-from collections.abc import Iterator
 
 import numpy as np
 import pytest
@@ -15,20 +14,6 @@ from robust_streaming_ml.seed import (
     seed_everything,
     torch_generator,
 )
-
-
-@pytest.fixture(autouse=True)
-def restore_global_state(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """seed_everything mutates process-global state; undo it after each test."""
-    monkeypatch.delenv("PYTHONHASHSEED", raising=False)
-    monkeypatch.delenv("CUBLAS_WORKSPACE_CONFIG", raising=False)
-    deterministic = torch.are_deterministic_algorithms_enabled()
-    cudnn_deterministic = torch.backends.cudnn.deterministic
-    cudnn_benchmark = torch.backends.cudnn.benchmark
-    yield
-    torch.use_deterministic_algorithms(deterministic)
-    torch.backends.cudnn.deterministic = cudnn_deterministic
-    torch.backends.cudnn.benchmark = cudnn_benchmark
 
 
 def draw() -> tuple[list[float], np.ndarray, torch.Tensor]:

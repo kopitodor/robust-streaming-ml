@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run directories (`run_dir.py`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -51,14 +51,19 @@ Individual commands:
 
 - Configurations are YAML files validated by `robust_streaming_ml.config.load_config`. Unknown keys, wrong types, and out-of-range values raise `ConfigError`. See `configs/example.yaml`.
 - `robust_streaming_ml.seed.seed_everything(seed, deterministic=True)` seeds Python, NumPy, and PyTorch and enables deterministic PyTorch algorithms. `numpy_generator` and `torch_generator` return explicitly seeded, independent generators.
-- `robust_streaming_ml.run_dir.create_run_dir(config)` creates a new run directory and records the configuration and environment metadata.
+- `robust_streaming_ml.run_dir.start_run(config)` is the single entry point for starting a run; every training, evaluation, corruption, or benchmark entry point must begin with it. In order, it:
+  1. resolves the git commit and dirty state of the repository containing the package source;
+  2. calls `seed_everything(config.seed, deterministic=config.deterministic)` and verifies the resulting PyTorch/cuDNN/environment state matches the configuration;
+  3. creates the run directory and writes `config.yaml` and `metadata.json`.
+- **Unavailable-revision policy: fail.** If git cannot resolve the revision (not a repository, no commits, git not installed, or git refusing the repository, e.g. "dubious ownership"), `start_run` raises `ProvenanceError` containing git's diagnostic. This happens before seeding or creating any directory. There is no manual revision override. Fix the git problem (for "dubious ownership", follow git's printed `safe.directory` instruction) and rerun.
+- A dirty working tree does not stop a run, but it is recorded as `source.dirty: true`. Results reported in `RESULTS.md` should come from runs with `dirty: false`.
 
 ### Artifact-directory conventions
 
 - Every run writes to its own directory `<run.output_root>/<run_id>/` (default root `runs/`), where `run_id` is `<UTC timestamp>_<experiment name>_<8 hex chars>`. Existing run directories are never reused or overwritten.
-- Each run directory contains `config.yaml` (the validated configuration used) and `metadata.json` (run ID, UTC creation time, seed, determinism flag, config SHA-256, Python/platform/package versions, PyTorch runtime details, git commit and dirty state, and command-line arguments). `git` is `null` when the revision cannot be determined.
+- Each run directory contains `config.yaml` (the validated configuration used) and `metadata.json`: run ID, UTC creation time, config SHA-256, `source` (git `commit` and `dirty`; dirty covers modified tracked files and untracked, non-ignored files), `seeding` (the seed and determinism state observed after seeding was applied: `torch_deterministic_algorithms`, `cudnn_deterministic`, `cudnn_benchmark`, `PYTHONHASHSEED`, `CUBLAS_WORKSPACE_CONFIG`), and `environment` (Python/platform/package versions, PyTorch runtime details, command-line arguments).
 - Later milestones add their outputs (checkpoints, predictions, reports) inside the same run directory.
-- `runs/`, `artifacts/`, `checkpoints/`, `data/`, and model files are git-ignored; do not commit them. Any result reported in `RESULTS.md` must reference a run directory produced this way.
+- `runs/`, `artifacts/`, `checkpoints/`, `data/`, and model files are git-ignored; do not commit them. Any result reported in `RESULTS.md` must reference a run directory created by `start_run`.
 
 ## Status
 

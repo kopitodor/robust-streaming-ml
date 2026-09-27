@@ -7,7 +7,7 @@
 - [x] Add a minimal import test and CI-ready local commands.
   - `tests/test_import.py`; `scripts/check.py` runs all checks and exits non-zero on failure. No CI workflow file is added yet.
 - [x] Define configuration schema and deterministic seed utility.
-  - `config.py` (strict YAML schema, `ConfigError`), `seed.py` (`seed_everything`, `numpy_generator`, `torch_generator`), `run_dir.py` (run directory with `config.yaml` + `metadata.json`), with unit tests.
+  - `config.py` (strict YAML schema, `ConfigError`), `seed.py` (`seed_everything`, `numpy_generator`, `torch_generator`), `run_dir.py` (`start_run`: resolves git provenance or fails with `ProvenanceError`, applies and verifies seeding, then writes `config.yaml` + `metadata.json`), with unit tests including temporary-git-repository provenance tests.
 - [x] Document environment setup and artifact-directory conventions.
   - See README sections "Environment setup", "Development commands", and "Artifact-directory conventions".
 
