@@ -49,6 +49,7 @@ __all__ = [
     "SourceRevision",
     "collect_environment_metadata",
     "config_digest",
+    "current_source_revision",
     "resolve_source_revision",
     "start_run",
 ]
@@ -148,6 +149,11 @@ def resolve_source_revision(source_dir: Path = PACKAGE_DIR) -> SourceRevision:
     return SourceRevision(commit=commit, dirty=dirty)
 
 
+def current_source_revision() -> SourceRevision:
+    """Revision of the running code: the repository containing this package."""
+    return resolve_source_revision(PACKAGE_DIR)
+
+
 def _package_version(name: str) -> str | None:
     try:
         return importlib_metadata.version(name)
@@ -243,7 +249,7 @@ def start_run(
     if path.exists():
         raise FileExistsError(f"run directory already exists: {path}")
 
-    source = resolve_source_revision(PACKAGE_DIR)
+    source = current_source_revision()
     seeding = _apply_seeding(config)
     run_metadata: dict[str, Any] = {
         "schema_version": METADATA_SCHEMA_VERSION,

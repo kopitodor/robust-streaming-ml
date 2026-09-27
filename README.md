@@ -81,8 +81,28 @@ The dataset is Speech Commands v0.02 (10-keyword subset), licensed CC BY 4.0. At
 uv run python scripts/acquire_speech_commands.py
 ```
 
-This downloads about 2.4 GB over HTTPS to `data/raw/speech_commands_v0.02.tar.gz` and accepts the archive only if its size and SHA-256 match the pinned values. It then extracts to `data/raw/speech_commands_v0.02/`. Extraction rejects absolute paths, `..`, links, and device files, and checks the pinned `LICENSE`, `README.md`, and split-list hashes. A completed extraction is marked by `.acquisition.json`. Re-running reuses a verified archive and a completed extraction. A mismatched archive or an incomplete directory stops the script with an error; it is never overwritten. Everything under the top-level `data/` folder is git-ignored. Manifest generation and audio validation are separate, not-yet-implemented steps.
+This downloads about 2.4 GB over HTTPS to `data/raw/speech_commands_v0.02.tar.gz` and accepts the archive only if its size and SHA-256 match the pinned values. It then extracts to `data/raw/speech_commands_v0.02/`. Extraction rejects absolute paths, `..`, links, and device files, and checks the pinned `LICENSE`, `README.md`, and split-list hashes. A completed extraction is marked by `.acquisition.json`. Re-running reuses a verified archive and a completed extraction. A mismatched archive or an incomplete directory stops the script with an error; it is never overwritten. Everything under the top-level `data/` folder is git-ignored.
+
+Then validate the extraction and build the manifest:
+
+```bash
+uv run python scripts/build_speech_commands_manifest.py
+```
+
+This decodes every file in the ten label folders with a strict WAV parser. It enforces the [data contract](docs/data-contract.md):
+- format (mono, 16 kHz, 16-bit PCM, 1 to 16,000 frames);
+- filename identity;
+- official split lists, with train derived from everything else;
+- duplicate content (`audio_sha256`);
+- speaker leakage;
+- a byte-for-byte cross-check against the pinned archive.
+
+It writes `data/manifests/speech_commands_v0.02_kw10.csv` plus a JSON sidecar, and deterministic reports in `data/reports/`. The manifest's SHA-256 is pinned in code, so a manifest with any other hash is rejected.
+
+The command fails closed: on any violation it exits non-zero, removes any existing manifest, and writes a `failed` report listing every error. It needs the code revision to be resolvable by git, like `start_run`.
+
+The real-data integration test (`pytest -m integration`) runs automatically when the local extraction is present, and is skipped otherwise.
 
 ## Status
 
-Milestone 1 (repository tooling and test baseline) is complete. Next: Milestone 2 in `TASKS.md`.
+Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Next: Milestone 3 in `TASKS.md`.

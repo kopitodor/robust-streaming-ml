@@ -52,6 +52,9 @@ testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
 xfail_strict = true
 filterwarnings = ["error"]
+markers = [
+  "integration: validates the local dataset under data/raw; skipped when it is absent",
+]
 
 [tool.ruff]
 line-length = 100

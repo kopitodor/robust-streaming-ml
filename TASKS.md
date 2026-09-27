@@ -20,8 +20,10 @@
 - [x] Human sign-off on the license (`license_verified_by` / `license_verified_on` in the verification record): project owner, 2026-09-27.
 - [x] Implement acquisition without committing data.
   - `robust_streaming_ml.data.acquisition` + `scripts/acquire_speech_commands.py`: pinned SHA-256/size download over HTTPS, safe extraction (no absolute/`..`/link/device members), pinned-file hash checks, idempotent re-runs; tested on synthetic archives. `.gitignore` now anchors `/data/` so the `data` package is not ignored.
-- [ ] Generate the manifest CSV and JSON sidecar exactly per the data contract schema (section 7), deterministically.
-- [ ] Implement the contract's validation rules (sections 2–6) with tests on small synthetic fixtures: format/duration, labels, split-list handling, duplicates, and speaker leakage.
+- [x] Generate the manifest CSV and JSON sidecar exactly per the data contract schema (section 7), deterministically.
+  - `scripts/build_speech_commands_manifest.py` writes `data/manifests/speech_commands_v0.02_kw10.{csv,json}` and `data/reports/…_validation.{json,md}` (git-ignored; see contract amendment 1). 38,546 rows; SHA-256 `f811a20d…ab6131c`, pinned in `SPEECH_COMMANDS_KW10`.
+- [x] Implement the contract's validation rules (sections 2–6) with tests on small synthetic fixtures: format/duration, labels, split-list handling, duplicates, and speaker leakage.
+  - Strict WAV parser, row checks, split-list parsing, content-hash duplicates, speaker leakage, and an archive cross-check, each with synthetic-fixture tests for its failure modes. A real-data integration test runs when `data/raw` is present. Result on the real data: passed, 0 errors, 1,477 within-split duplicate-content warnings (640 groups, all single-speaker).
 
 ## 3. Baseline training
 
@@ -36,6 +38,7 @@
 - [ ] Add validation/test evaluation reports and prediction artifacts.
 - [ ] Implement and document a calibration procedure if justified by validation data.
 - [ ] Verify metrics against fixed fixtures.
+- [ ] Decide and document how evaluation treats within-split duplicate audio. The test split has 119 groups covering 240 files, i.e. 121 redundant copies (see `docs/datasets/speech_commands_v0.02.md`). The manifest keeps them all.
 
 ## 5. Robustness suite
 

@@ -21,7 +21,7 @@ The archive lives in the git-ignored folder `data/raw/speech_commands_v0.02.tar.
 | `license_file_path` | `LICENSE` (top level of the archive) |
 | `license_file_sha256` | `fd3a263fe19ed8faa9068b43abaebafc02c77897b0c6fc09abc04bb592e5f16e` (18651 bytes) |
 | `attribution_text` | See "Attribution" below. |
-| `redistribution_notes` | CC BY 4.0 allows redistribution with attribution and an indication of changes. This project redistributes **no audio**. The committed manifest (paths, hashes, audio metadata) will carry the attribution below. |
+| `redistribution_notes` | CC BY 4.0 allows redistribution with attribution and an indication of changes. This project redistributes **no audio**. The manifest (paths, hashes, audio metadata) is generated locally under the git-ignored `data/` folder, and its JSON sidecar carries the attribution below. It is not committed; only its SHA-256 is. |
 | `license_verified_by` / `license_verified_on` | **Project owner, 2026-09-27.** The owner approved using Speech Commands v0.02 under CC BY 4.0 for this portfolio project and accepted the attribution requirements recorded below. Claude (AI assistant) read `LICENSE` and `README.md` on the same date and prepared this record. |
 
 Other top-level files, with SHA-256 values computed locally:
@@ -66,7 +66,7 @@ archivePrefix = "arXiv",
 
 ## Structural cross-checks against the contract
 
-These come from the archive's file listing and the two list files only; no audio was decoded. They don't replace the validation step still to be implemented (contract sections 2–6).
+These come from the archive's file listing and the two list files only; no audio was decoded. Full decoding validation is recorded in the next section.
 
 - Archive members: 105,841 regular files and 37 directories.
 - Top level: 36 folders (35 words plus `_background_noise_`) and the files listed above.
@@ -92,4 +92,49 @@ These come from the archive's file listing and the two list files only; no audio
   That's 38,546 files from 2,492 distinct speakers, and **no speaker appears in more than one split**.
 - The README describes the split rule: a SHA-1 of the file's basename with everything from `_nohash_` onward removed. Because this depends on the speaker ID alone, all of a speaker's clips land in the same split. This matches the contract's premise, and the speaker check above is consistent with it.
 
-**Not yet verified:** sample rate, channel count, sample format, clip durations, all-zero audio, and content-level duplicates (SHA-256 of each file). The README says clips are 16-bit little-endian PCM, 16 kHz, trimmed to one second, but the contract requires these to be checked by decoding every file in the validation step.
+## Validation and manifest (2026-09-27)
+
+Every file in the ten label folders was read and decoded by `robust_streaming_ml.data.validation` (contract sections 2–7), and the extraction was cross-checked against the pinned archive. Result: **passed, 0 errors**. The commands and outcomes are in RESULTS.md.
+
+**Manifest** (`data/manifests/speech_commands_v0.02_kw10.csv`, git-ignored, regenerated with `scripts/build_speech_commands_manifest.py`):
+
+| Field | Value |
+| --- | --- |
+| `manifest_sha256` (pinned in `SPEECH_COMMANDS_KW10`) | `f811a20d030ee415fced0b3bc8d7471d6ebdbb4b3d4ee680ec62d8614ab6131c` |
+| Size | 8,761,959 bytes, 38,547 lines (header + 38,546 rows) |
+| Rows by split | train 30,769 · validation 3,703 · test 4,074 (per-label counts as in the table above) |
+
+**Audio format:** all 38,546 files are mono, 16,000 Hz, `PCM_16`. Each has exactly one 16-byte `fmt ` chunk and one `data` chunk, and none has extra chunks or trailing bytes. Frame counts:
+
+| Split | Min | Smallest per-label P5 | Median (every label) | Max | Clips under 16,000 frames (1 s) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| train | 4,778 (0.299 s) | 12,136 | 16,000 | 16,000 | 2,905 |
+| validation | 5,461 | 11,606 | 16,000 | 16,000 | 367 |
+| test | 5,461 | 12,970 | 16,000 | 16,000 | 299 |
+
+No clip is empty or longer than 16,000 frames. Nothing is padded, trimmed, or resampled.
+
+**Silence:** no clip is all-zero, and none is near-silent (peak ≤ 32, about −60 dBFS). The smallest peak amplitude is 188.
+
+**Identity and splits:**
+- Every filename matches `<8 lowercase hex>_nohash_<canonical integer>.wav`.
+- Split-list entries kept: validation 3,703, test 4,074. Entries for other words ignored: 6,278 and 6,931.
+- There are 2,492 speakers: train 2,008, validation 245, test 239. **None appears in more than one split.**
+- There are no duplicate relative paths or rows.
+
+**Duplicate audio content** (`audio_sha256`, the SHA-256 of the decoded PCM sample bytes):
+- 640 groups of identical audio contain 1,477 files. Every group is also byte-identical (`sha256`). Every group is a single speaker, a single label, and a single split.
+- So there is no cross-split or cross-label duplication. Under the contract these are warnings, and all rows are kept.
+
+| Split | Groups | Files in groups |
+| --- | ---: | ---: |
+| train | 510 | 1,215 |
+| validation | 11 | 22 |
+| test | 119 | 240 |
+
+  Group sizes: 543 × 2, 57 × 3, 16 × 4, 5 × 5, 7 × 6, 10 × 7, 1 × 9, and 1 × 10 (the largest is `yes/ddedba85_nohash_*`). Near-duplicates (re-encoded, trimmed, or gain-changed audio) are not detected.
+
+**Archive cross-check:** the pinned archive was streamed and its SHA-256 re-verified. All 38,546 files in the ten label folders are byte-identical to their archive members, with no missing or extra files.
+
+**Ignored, as the contract allows:** 25 other word folders and `_background_noise_/` (6 `.wav` files plus `README.md`), and the top-level `.DS_Store`.
+
