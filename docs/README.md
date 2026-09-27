@@ -2,6 +2,7 @@
 
 Supporting protocol notes, dataset license records, demo instructions, and reproducibility reports will live here.
 
+- [robustness-protocol.md](robustness-protocol.md): protocol `kw10-robustness-v1`, with its fixed inputs and gates, the 5 corruptions × 3 severities with parameters, seeds, the codec backend and licensing, output validation, degradation, the duplicate policy, and limitations.
 - [evaluation-protocol.md](evaluation-protocol.md): protocol `kw10-clean-eval-v1`. It defines the gates, test isolation, metric definitions (zero-division policy, 15-bin ECE), temperature scaling fitted on validation only, the duplicate policy, and the outputs.
 - [baseline.md](baseline.md): the Milestone 3 baseline: window and log-mel features, CNN shapes and parameter count, training procedure, determinism, checkpoint format, and run layout.
 - [data-contract.md](data-contract.md): Speech Commands v2 10-keyword data contract (source, license verification fields, splits, validation rules, manifest schema). Planning; not yet implemented.

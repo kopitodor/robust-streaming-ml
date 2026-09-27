@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), and evaluation and calibration (`evaluation/`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), and the robustness suite (`robustness/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -145,6 +145,23 @@ It writes to the new run directory:
 - `report.json`, `report.md`, and `summary.json`.
 
 A duplicate-content sensitivity view is reported separately and never replaces the official result.
+
+## Robustness suite
+
+```bash
+uv run python scripts/evaluate_robustness.py --config configs/kw10_cnn_baseline_robustness.yaml
+```
+
+This runs protocol `kw10-robustness-v1` ([docs/robustness-protocol.md](docs/robustness-protocol.md)) on the official test split, using the same checkpoint with raw probabilities and no refitting. It covers 5 corruptions (noise, reverb, resample, clipping, Opus codec) at 3 fixed severities each. Each clip's seed is derived from its identity and the protocol seed.
+
+It fails closed on:
+- the checkpoint and manifest gates;
+- the pinned Milestone 4 baseline report;
+- the exact codec backend (`soundfile` 0.14.0 / libsndfile 1.2.2, installed by `uv sync`);
+- a dirty tree;
+- a failure to reproduce the Milestone 4 clean test logits bit-for-bit.
+
+It writes per-condition predictions and corruption manifests, plus `report.json` and `report.md`, with degradation = clean − corrupted.
 
 ## Status
 

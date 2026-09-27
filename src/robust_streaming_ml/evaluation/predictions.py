@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import csv
 import io
+from collections.abc import Callable
 from dataclasses import dataclass
 
 import numpy as np
@@ -39,6 +40,7 @@ __all__ = [
     "decode_predictions",
     "encode_calibrated",
     "encode_predictions",
+    "infer_logits",
     "predict_split",
     "prediction_columns",
 ]
@@ -101,14 +103,14 @@ def predict_split(
         raise PredictionError("audio and manifest rows are not in the same order")
     if any(r.split != audio.split for r in rows):
         raise PredictionError("rows from another split were passed")
-    model.eval()
-    chunks: list[npt.NDArray[np.float32]] = []
-    with torch.no_grad():
-        for start in range(0, len(audio), batch_size):
-            waveforms = audio.waveforms[start : start + batch_size]
-            logits = model(frontend(pcm16_to_float(waveforms)))
-            chunks.append(logits.to(torch.float32).numpy().copy())
-    logits_all = np.concatenate(chunks) if chunks else np.zeros((0, len(labels)), dtype=np.float32)
+    logits_all = infer_logits(
+        model,
+        frontend,
+        audio.waveforms,
+        batch_size=batch_size,
+        num_classes=len(labels),
+        to_float=pcm16_to_float,
+    )
     return PredictionSet(
         split=audio.split,
         labels=labels,
@@ -118,6 +120,36 @@ def predict_split(
         y_true=audio.labels.numpy().astype(np.int64),
         logits=logits_all.astype(np.float32),
     )
+
+
+def infer_logits(
+    model: KeywordCNN,
+    frontend: LogMelSpectrogram,
+    windows: torch.Tensor,
+    *,
+    batch_size: int,
+    num_classes: int,
+    to_float: Callable[[torch.Tensor], torch.Tensor] | None = None,
+) -> npt.NDArray[np.float32]:
+    """Eval-mode logits for ``[N, num_samples]`` windows, in order, in fixed-size batches.
+
+    ``to_float`` converts each batch to float32 (the clean path passes
+    ``pcm16_to_float``); windows that are already float32 are used as they are.
+    """
+    model.eval()
+    chunks: list[npt.NDArray[np.float32]] = []
+    with torch.no_grad():
+        for start in range(0, windows.shape[0], batch_size):
+            batch = windows[start : start + batch_size]
+            if to_float is not None:
+                batch = to_float(batch)
+            if batch.dtype != torch.float32:
+                raise PredictionError(f"model input must be float32, got {batch.dtype}")
+            logits = model(frontend(batch))
+            chunks.append(logits.to(torch.float32).numpy().copy())
+    if not chunks:
+        return np.zeros((0, num_classes), dtype=np.float32)
+    return np.concatenate(chunks).astype(np.float32)
 
 
 def prediction_columns(labels: tuple[str, ...]) -> list[str]:

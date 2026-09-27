@@ -6,14 +6,12 @@ import hashlib
 import json
 import runpy
 from collections.abc import Callable
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import pytest
 import torch
 
-from robust_streaming_ml.config import parse_config
 from robust_streaming_ml.evaluation import run as eval_run
 from robust_streaming_ml.evaluation.calibration import load_calibration
 from robust_streaming_ml.evaluation.config import EvaluationConfig
@@ -22,9 +20,8 @@ from robust_streaming_ml.evaluation.predictions import decode_predictions
 from robust_streaming_ml.evaluation.run import EvaluationError, evaluate
 from robust_streaming_ml.run_dir import ProvenanceError
 from robust_streaming_ml.training.data import DataCompatibilityError
-from robust_streaming_ml.training.loop import train
 from tests.conftest import git, git_commit_all
-from tests.training_fixtures import ToyTraining, make_toy_training
+from tests.evaluation_fixtures import Trained, make_trained
 
 EVAL_FILES = {
     "config.yaml",
@@ -40,44 +37,9 @@ EVAL_FILES = {
 }
 
 
-@dataclass
-class Trained:
-    toy: ToyTraining
-    checkpoint: Path
-    tmp: Path
-
-    def raw(self) -> dict[str, Any]:
-        data = dict(self.toy.raw["data"])
-        return {
-            "schema_version": 1,
-            "name": "toy-eval",
-            "seed": 7,
-            "deterministic": True,
-            "run": {"output_root": str(self.tmp / "eval_runs")},
-            "data": data,
-            "checkpoint": {
-                "path": str(self.checkpoint),
-                "sha256": hashlib.sha256(self.checkpoint.read_bytes()).hexdigest(),
-            },
-            "evaluation": {"batch_size": 3, "num_threads": 1},
-        }
-
-    def config(self, **overrides: Any) -> EvaluationConfig:
-        data = self.raw()
-        for dotted, value in overrides.items():
-            target = data
-            *parents, leaf = dotted.split(".")
-            for key in parents:
-                target = target[key]
-            target[leaf] = value
-        return parse_config(data, schema=EvaluationConfig)
-
-
 @pytest.fixture
 def trained(tmp_path: Path, package_repo: Path) -> Trained:
-    toy = make_toy_training(tmp_path)
-    result = train(toy.config(), dataset_spec=toy.spec)
-    return Trained(toy=toy, checkpoint=result.best_checkpoint, tmp=tmp_path)
+    return make_trained(tmp_path)
 
 
 def eval_runs(trained: Trained) -> list[Path]:

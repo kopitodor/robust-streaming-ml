@@ -57,7 +57,8 @@
 
 ## 5. Robustness suite
 
-- [ ] Define deterministic noise, reverberation, resampling, clipping, and codec-artifact protocols.
+- [x] Define deterministic noise, reverberation, resampling, clipping, and codec-artifact protocols.
+  - `docs/robustness-protocol.md` (`kw10-robustness-v1`) and `robustness/corruptions.py`: 5 version-1 transforms × 3 severities, per-example seeds from `relative_path`, and a pinned Opus backend (`soundfile` 0.14.0 / libsndfile 1.2.2). Committed before any real run.
 - [ ] Generate corruption manifests with severity and seed metadata.
 - [ ] Evaluate every corruption/severity pair and compute degradation from clean metrics.
 - [ ] Present failures and limitations alongside aggregate tables.

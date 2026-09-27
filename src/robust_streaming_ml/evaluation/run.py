@@ -35,7 +35,12 @@ from robust_streaming_ml.evaluation.calibration import (
     load_calibration,
     save_calibration,
 )
-from robust_streaming_ml.evaluation.config import ECE_BINS, PROTOCOL, EvaluationConfig
+from robust_streaming_ml.evaluation.config import (
+    ECE_BINS,
+    PROTOCOL,
+    CheckpointRef,
+    EvaluationConfig,
+)
 from robust_streaming_ml.evaluation.metrics import classification_metrics
 from robust_streaming_ml.evaluation.predictions import (
     PredictionSet,
@@ -52,7 +57,7 @@ from robust_streaming_ml.run_dir import (
     current_source_revision,
     start_run,
 )
-from robust_streaming_ml.training.config import WindowSection
+from robust_streaming_ml.training.config import DataSection, WindowSection
 from robust_streaming_ml.training.data import (
     ValidatedManifest,
     check_manifest_inputs,
@@ -98,24 +103,24 @@ def _json_bytes(obj: Any) -> bytes:
     return (json.dumps(obj, indent=2, sort_keys=True) + "\n").encode("utf-8")
 
 
-def verify_checkpoint(config: EvaluationConfig) -> LoadedCheckpoint:
+def verify_checkpoint(checkpoint: CheckpointRef, data: DataSection) -> LoadedCheckpoint:
     """Gates 1-3: pinned hash, compatibility, and checkpoint provenance (no side effects)."""
-    path = config.checkpoint.path
+    path = checkpoint.path
     if not path.is_file():
         raise EvaluationError(f"checkpoint not found: {path}")
     digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest != config.checkpoint.sha256:
-        raise EvaluationError(f"checkpoint SHA-256 {digest} != pinned {config.checkpoint.sha256}")
+    if digest != checkpoint.sha256:
+        raise EvaluationError(f"checkpoint SHA-256 {digest} != pinned {checkpoint.sha256}")
     try:
         loaded = load_checkpoint(
             path,
-            expect_manifest_sha256=config.data.manifest_sha256,
-            expect_labels=config.data.labels,
+            expect_manifest_sha256=data.manifest_sha256,
+            expect_labels=data.labels,
         )
     except CheckpointError as exc:
         raise EvaluationError(f"incompatible checkpoint: {exc}") from exc
     meta = loaded.metadata
-    if meta["manifest"]["dataset"] != config.data.dataset:
+    if meta["manifest"]["dataset"] != data.dataset:
         raise EvaluationError("checkpoint was trained on another dataset")
     if meta["manifest"].get("splits_used") != ["train", "validation"]:
         raise EvaluationError("checkpoint does not record training on train/validation only")
@@ -146,7 +151,7 @@ def evaluate(
     allow_dirty_source: bool = False,
 ) -> EvaluationResult:
     """Run the protocol; see the module docstring."""
-    loaded = verify_checkpoint(config)
+    loaded = verify_checkpoint(config.checkpoint, config.data)
     window = WindowSection.model_validate(loaded.metadata["preprocessing"]["window"])
     manifest = check_manifest_inputs(config.data, window, dataset_spec)
     source = current_source_revision()

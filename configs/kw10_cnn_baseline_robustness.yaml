@@ -1,0 +1,35 @@
+# Robustness suite for the Milestone 3 baseline (protocol kw10-robustness-v1).
+# Schema: robust_streaming_ml.robustness.config.RobustnessConfig (schema_version 1).
+# Corruptions, versions, severities, parameters, and seeds are fixed in code and
+# documented in docs/robustness-protocol.md; this file only names the inputs.
+schema_version: 1
+name: kw10-cnn-baseline-robustness
+seed: 1234               # recorded by start_run; corruption seeds use the protocol seed
+deterministic: true
+run:
+  output_root: runs
+
+data:
+  dataset: speech_commands_v0.02_kw10
+  manifest_path: data/manifests/speech_commands_v0.02_kw10.csv
+  manifest_sha256: f811a20d030ee415fced0b3bc8d7471d6ebdbb4b3d4ee680ec62d8614ab6131c
+  validation_report_path: data/reports/speech_commands_v0.02_kw10_validation.json
+  audio_root: data/raw/speech_commands_v0.02
+  # Quoted: YAML 1.1 reads bare yes/no/on/off as booleans.
+  labels: ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
+  load_workers: 8
+
+checkpoint:              # the Milestone 4 evaluated checkpoint (git-ignored local artifact)
+  path: runs/20260927T210911Z_kw10-cnn-baseline_6c9d6cdf/checkpoints/best.pt
+  sha256: d21f89283a128820e93b00d6e104805b3423fd47f2ed8791ba7775d5bf9d267e
+
+baseline:                # Milestone 4 official evaluation; clean = its raw test metrics
+  run_dir: runs/20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a
+  report_sha256: 2f9a0f5bdbbdb89cf1053c604e821ccd139950a73d6fe07ab4e059872d56b237
+
+robustness:
+  protocol: kw10-robustness-v1
+  batch_size: 256        # must equal the baseline's (checked)
+  num_threads: 8         # must equal the baseline's (checked)
+  corruption_workers: 8
+  retain_audio_examples: 0

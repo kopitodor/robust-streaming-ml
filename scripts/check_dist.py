@@ -8,6 +8,7 @@ Usage: ``uv run python scripts/check_dist.py`` from the repository root, after
 2. the wheel's contents are checked (package modules and ``py.typed`` present,
    no tests or stray top-level packages);
 3. ``uv sync --frozen --offline --no-dev --group smoke --no-install-project``
+   ``--python <this interpreter>``
    creates a fresh temporary environment with the locked runtime
    dependencies and pytest, from the local uv cache only;
 4. the wheel is installed there with ``--no-deps``;
@@ -49,6 +50,10 @@ REQUIRED_WHEEL_FILES = {
     f"{PACKAGE}/features.py",
     f"{PACKAGE}/model.py",
     f"{PACKAGE}/py.typed",
+    f"{PACKAGE}/robustness/__init__.py",
+    f"{PACKAGE}/robustness/config.py",
+    f"{PACKAGE}/robustness/corruptions.py",
+    f"{PACKAGE}/robustness/run.py",
     f"{PACKAGE}/run_dir.py",
     f"{PACKAGE}/seed.py",
     f"{PACKAGE}/training/__init__.py",
@@ -120,6 +125,9 @@ def main() -> int:
                 "smoke",
                 "--no-install-project",
                 "--quiet",
+                # Same interpreter as the running environment, so the offline cache matches.
+                "--python",
+                sys.executable,
             ],
             cwd=ROOT,
             env=env,

@@ -19,6 +19,7 @@ dependencies = [
   "numpy>=1.26",
   "pydantic>=2.6",
   "pyyaml>=6.0",
+  "soundfile>=0.14",
   "torch>=2.2",
 ]
 
@@ -80,6 +81,11 @@ strict = true
 files = ["src", "tests", "scripts"]
 plugins = ["pydantic.mypy"]
 warn_unreachable = true
+
+[[tool.mypy.overrides]]
+# soundfile ships no type information; it is used only by the codec corruption.
+module = ["soundfile"]
+ignore_missing_imports = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

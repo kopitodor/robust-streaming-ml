@@ -25,9 +25,17 @@ from dataclasses import dataclass
 import numpy as np
 import numpy.typing as npt
 
-__all__ = ["WAVE_FORMAT_PCM", "WavData", "WavError", "parse_wav"]
+__all__ = [
+    "WAVE_FORMAT_IEEE_FLOAT",
+    "WAVE_FORMAT_PCM",
+    "WavData",
+    "WavError",
+    "encode_wav_float32",
+    "parse_wav",
+]
 
 WAVE_FORMAT_PCM = 1
+WAVE_FORMAT_IEEE_FLOAT = 3
 
 
 class WavError(ValueError):
@@ -62,6 +70,24 @@ class WavData:
         if self.format_tag != WAVE_FORMAT_PCM or self.bits_per_sample != 16:
             raise WavError(f"cannot decode {self.sample_format} as PCM_16")
         return np.frombuffer(self.sample_bytes, dtype="<i2")
+
+    def samples_float32(self) -> npt.NDArray[np.float32]:
+        """Decode samples as little-endian IEEE float32 (format tag 3, 32 bits only)."""
+        if self.format_tag != WAVE_FORMAT_IEEE_FLOAT or self.bits_per_sample != 32:
+            raise WavError(f"cannot decode {self.sample_format} as float32")
+        return np.frombuffer(self.sample_bytes, dtype="<f4")
+
+
+def encode_wav_float32(samples: npt.NDArray[np.float32], sample_rate_hz: int) -> bytes:
+    """Mono IEEE-float32 WAVE bytes (``fmt `` chunk of 16 bytes, then ``data``)."""
+    if samples.ndim != 1:
+        raise WavError("only mono samples can be encoded")
+    data = samples.astype("<f4").tobytes()
+    rate = sample_rate_hz
+    fmt = struct.pack("<HHIIHH", WAVE_FORMAT_IEEE_FLOAT, 1, rate, rate * 4, 4, 32)
+    body = b"WAVE" + struct.pack("<4sI", b"fmt ", 16) + fmt
+    body += struct.pack("<4sI", b"data", len(data)) + data  # float32 data is always even-sized
+    return struct.pack("<4sI", b"RIFF", len(body)) + body
 
 
 def parse_wav(data: bytes) -> WavData:
