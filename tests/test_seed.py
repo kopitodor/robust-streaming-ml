@@ -4,6 +4,7 @@ import os
 import random
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 import torch
 
@@ -16,7 +17,7 @@ from robust_streaming_ml.seed import (
 )
 
 
-def draw() -> tuple[list[float], np.ndarray, torch.Tensor]:
+def draw() -> tuple[list[float], npt.NDArray[np.float64], torch.Tensor]:
     return (
         [random.random() for _ in range(5)],
         np.random.rand(5),  # noqa: NPY002 - exercising the legacy global RNG
@@ -25,8 +26,8 @@ def draw() -> tuple[list[float], np.ndarray, torch.Tensor]:
 
 
 def assert_draws_equal(
-    a: tuple[list[float], np.ndarray, torch.Tensor],
-    b: tuple[list[float], np.ndarray, torch.Tensor],
+    a: tuple[list[float], npt.NDArray[np.float64], torch.Tensor],
+    b: tuple[list[float], npt.NDArray[np.float64], torch.Tensor],
 ) -> None:
     assert a[0] == b[0]
     np.testing.assert_array_equal(a[1], b[1])

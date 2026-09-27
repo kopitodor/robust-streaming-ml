@@ -37,6 +37,8 @@ Run all checks (format, lint, type check, tests, distribution); exits non-zero i
 uv run python scripts/check.py
 ```
 
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on every push and pull request on `ubuntu-latest` with Python 3.10 (`UV_PYTHON=3.10`). It installs uv 0.12.13, runs `uv sync --locked` (which fills uv's cache), then runs `uv run python scripts/check.py`. The distribution check inside it stays offline.
+
 Individual commands:
 
 | Purpose | Command |

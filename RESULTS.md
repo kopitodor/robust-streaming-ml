@@ -58,3 +58,14 @@ Added tool version: hatchling 1.32.4 (locked, dev group). uv 0.12.13 and CPython
 | 2026-09-27 | 1 | `uv run python scripts/check.py` | Format: 21 files already formatted; lint: all checks passed; mypy: no issues in 12 source files; pytest: 78 passed; dist: wheel built offline (8 files), installed into a temporary environment, imported from that environment's site-packages, 4 import smoke tests passed; exit 0 |
 | 2026-09-27 | 1 | `start_run(load_config("configs/example.yaml"), root=<scratch dir>)` in this checkout via `uv run python` | Raised `ProvenanceError` with git's "detected dubious ownership" diagnostic; exit 1 |
 | 2026-09-27 | 1 | Same call with process-scoped `safe.directory` (`GIT_CONFIG_COUNT`/`GIT_CONFIG_KEY_0`/`GIT_CONFIG_VALUE_0`) | Succeeded; recorded `source.commit` = `2fe501c9e9387445cbf3023150fb3c4e6fe15785` (HEAD at the time) and `dirty: true` (these changes were uncommitted) |
+
+### CI workflow (local rehearsal only)
+
+The GitHub Actions workflow itself has not run yet; these rows are local runs on Windows only.
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-27 | 1 | In a fresh `git clone` of commit `efd4a06` with `UV_PYTHON=3.10`: `uv sync --locked` | Exit 0; CPython 3.10.21 environment created from `uv.lock` |
+| 2026-09-27 | 1 | Same clone: `uv run python scripts/check.py` | Failed at the types step: mypy reported 3 `type-arg` errors in `tests/test_seed.py` for a bare `np.ndarray` (numpy 2.2.6 is locked for Python 3.10); format, lint, tests (78 passed), and dist passed |
+| 2026-09-27 | 1 | Same clone with the annotation fix (`npt.NDArray[np.float64]`): `uv run python scripts/check.py` | All five checks passed on CPython 3.10.21: mypy no issues in 12 files, 78 tests passed, distribution check passed offline; exit 0 |
+| 2026-09-27 | 1 | `uv run python scripts/check.py` (main checkout, CPython 3.14.2) | All five checks passed; 78 tests passed; exit 0 |
