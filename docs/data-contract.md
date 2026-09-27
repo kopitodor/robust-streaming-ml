@@ -1,6 +1,6 @@
 # Data contract: Speech Commands v2, 10-keyword subset
 
-Status: **planning.** Nothing has been downloaded. Statements marked *expected* describe the dataset as documented upstream and must be confirmed against the downloaded archive; if they are wrong, the acquisition code must fail rather than adapt silently. Decision: [ADR 0001](decisions/0001-dataset-speech-commands-v2.md).
+Status: **section 1 verified against the downloaded archive on 2026-09-27** (see [verification record](datasets/speech_commands_v0.02.md)); sections 2–7 are not yet implemented. Before verification, nothing had been downloaded. Statements marked *expected* describe the dataset as documented upstream and must be confirmed against the downloaded archive; if they are wrong, the acquisition code must fail rather than adapt silently. Decision: [ADR 0001](decisions/0001-dataset-speech-commands-v2.md).
 
 Paths are POSIX-style and relative to the extracted archive root. "Error" means validation fails and no manifest is written; "warning" means the manifest is written and the issue appears in the validation report.
 
@@ -14,6 +14,9 @@ Canonical source (expected):
 | `dataset_version` | `v0.02` |
 | `source_url` | `http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz` |
 | `archive_filename` | `speech_commands_v0.02.tar.gz` |
+| `retrieval_url` | `https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz`: the same object as `source_url`, over HTTPS (HTTPS on `download.tensorflow.org` fails certificate validation). |
+| `archive_sha256` (pinned) | `af14739ee7dc311471de98f5f9d2c9191b18aedfe957f4a6ff791c709868ff58` |
+| `archive_size_bytes` (pinned) | `2428923189` |
 | `citation` | Warden, P. (2018). *Speech Commands: A Dataset for Limited-Vocabulary Speech Recognition.* arXiv:1804.03209 |
 
 Only this archive is used. The separate `speech_commands_test_set_v0.02.tar.gz` is out of scope (ADR 0001).
@@ -22,7 +25,7 @@ Only this archive is used. The separate `speech_commands_test_set_v0.02.tar.gz` 
 
 | Field | Required | How it is filled |
 | --- | --- | --- |
-| `archive_sha256` | yes | SHA-256 of the downloaded archive, computed locally. On re-acquisition, a mismatch is an error. |
+| `archive_sha256` | yes | SHA-256 of the downloaded archive, computed locally. It must equal the pinned value above; a mismatch is an error. |
 | `archive_size_bytes` | yes | Measured locally. |
 | `retrieved_at_utc` | yes | Time of download. |
 | `license_name` | yes | From the license file shipped in the archive (expected: Creative Commons Attribution 4.0, CC BY 4.0). |
@@ -37,7 +40,7 @@ Only this archive is used. The separate `speech_commands_test_set_v0.02.tar.gz` 
 
 `LABELS = ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]`; `label_index` is the position in this list. The label of a file is the name of its top-level directory.
 
-- Files in the ten label directories are candidates. Every other top-level directory, including the other 25 words and `_background_noise_/`, is ignored and is not an error. The report counts the ignored files per directory.
+- Files in the ten label directories are candidates. Every other top-level directory, including the other 25 words and `_background_noise_/`, is ignored and is not an error. The report counts the ignored files per directory. Top-level files other than `LICENSE`, `README.md`, and the two split lists (for example the archive's `.DS_Store`) are ignored and listed in the report.
 - Error: any of the ten directories is missing or has no `.wav` files.
 - Error: a manifest row whose `label` is not in `LABELS`, or whose `label_index` does not match its label.
 - Error: any of the ten labels has zero examples in any split.

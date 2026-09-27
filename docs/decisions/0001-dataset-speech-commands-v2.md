@@ -1,6 +1,6 @@
 # 0001 — Dataset: Google Speech Commands v2, 10-keyword subset
 
-- **Status:** Accepted for planning. Using the data remains blocked until the verification checklist in [the data contract](../data-contract.md#1-source-version-and-license) is complete.
+- **Status:** Accepted. The source, checksum, license, and attribution were verified against the downloaded archive on 2026-09-27 ([verification record](../datasets/speech_commands_v0.02.md)). Human sign-off on the license is still pending.
 - **Date:** 2026-09-27
 - **Milestone:** 2 (dataset acquisition and validation), planning only
 

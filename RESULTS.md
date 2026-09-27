@@ -69,3 +69,15 @@ The GitHub Actions workflow itself has not run yet; these rows are local runs on
 | 2026-09-27 | 1 | Same clone: `uv run python scripts/check.py` | Failed at the types step: mypy reported 3 `type-arg` errors in `tests/test_seed.py` for a bare `np.ndarray` (numpy 2.2.6 is locked for Python 3.10); format, lint, tests (78 passed), and dist passed |
 | 2026-09-27 | 1 | Same clone with the annotation fix (`npt.NDArray[np.float64]`): `uv run python scripts/check.py` | All five checks passed on CPython 3.10.21: mypy no issues in 12 files, 78 tests passed, distribution check passed offline; exit 0 |
 | 2026-09-27 | 1 | `uv run python scripts/check.py` (main checkout, CPython 3.14.2) | All five checks passed; 78 tests passed; exit 0 |
+
+## Dataset verification log
+
+Data verification only; these are not experiment results. Details and all values: `docs/datasets/speech_commands_v0.02.md`.
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-27 | 2 | `curl -sSI https://download.tensorflow.org/data/speech_commands_v0.02.tar.gz` | Failed: certificate check `SEC_E_WRONG_PRINCIPAL` |
+| 2026-09-27 | 2 | `curl -sSI http://download.tensorflow.org/data/speech_commands_v0.02.tar.gz` and the same object at `https://storage.googleapis.com/download.tensorflow.org/...` | Both HTTP 200 with identical ETag, generation, size (2428923189), and MD5 header |
+| 2026-09-27 | 2 | `curl -fsSL --retry 3 -o data/raw/speech_commands_v0.02.tar.gz https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz` | Exit 0; 2428923189 bytes; completed 2026-09-27T18:45:33Z |
+| 2026-09-27 | 2 | Python `hashlib` over the archive | SHA-256 `af14739e…68ff58`; MD5 matches the server's `x-goog-hash` and ETag |
+| 2026-09-27 | 2 | Python `tarfile` listing, plus extraction of `LICENSE`, `README.md`, and both split lists | 105,829 word `.wav` files (matches README); lists clean and disjoint; 10-keyword subset 30769/3703/4074 train/validation/test; 0 speakers crossing splits; `LICENSE` is CC BY 4.0 |
