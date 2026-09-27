@@ -1,5 +1,7 @@
 # Review findings
 
+> Historical record. This review covered commit `2535fc3` (Milestone 1: tooling, config/seed/run-dir utilities, tests). Commits `2fe501c` and `efd4a06` addressed its findings. The findings below are preserved as originally written.
+
 ## P1
 
 ### Run provenance can silently omit the source revision
