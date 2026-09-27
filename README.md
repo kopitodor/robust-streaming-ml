@@ -165,4 +165,4 @@ It writes per-condition predictions and corruption manifests, plus `report.json`
 
 ## Status
 
-Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestone 3 (baseline training) and Milestone 4 (clean evaluation and calibration, protocol `kw10-clean-eval-v1`) are complete; see `RESULTS.md`. Next: Milestone 5 (robustness suite) in `TASKS.md`.
+Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestones 3 (baseline training), 4 (clean evaluation and calibration, `kw10-clean-eval-v1`), and 5 (robustness suite, `kw10-robustness-v1`) are complete; see `RESULTS.md`. Next: Milestone 6 (streaming and ONNX inference) in `TASKS.md`.

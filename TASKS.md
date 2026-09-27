@@ -59,9 +59,12 @@
 
 - [x] Define deterministic noise, reverberation, resampling, clipping, and codec-artifact protocols.
   - `docs/robustness-protocol.md` (`kw10-robustness-v1`) and `robustness/corruptions.py`: 5 version-1 transforms × 3 severities, per-example seeds from `relative_path`, and a pinned Opus backend (`soundfile` 0.14.0 / libsndfile 1.2.2). Committed before any real run.
-- [ ] Generate corruption manifests with severity and seed metadata.
-- [ ] Evaluate every corruption/severity pair and compute degradation from clean metrics.
-- [ ] Present failures and limitations alongside aggregate tables.
+- [x] Generate corruption manifests with severity and seed metadata.
+  - `conditions/<corruption>/<severity>/corruption_manifest.csv`: per clip, the source hash, corruption, version, severity, seed, output SHA-256, and measurements.
+- [x] Evaluate every corruption/severity pair and compute degradation from clean metrics.
+  - Run `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` (commit `e024ee8`): all 15 conditions on the full test split, raw probabilities, degradation against the Milestone 4 raw test metrics. See RESULTS.md.
+- [x] Present failures and limitations alongside aggregate tables.
+  - RESULTS.md lists every condition, including negative degradation, and records that there were no failures or non-runs, with the limitations stated.
 
 ## 6. Streaming and ONNX inference
 

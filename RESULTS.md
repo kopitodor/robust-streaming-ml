@@ -1,6 +1,6 @@
 # Results
 
-The experiment results table holds the Milestone 4 clean evaluation, protocol `kw10-clean-eval-v1` (docs/evaluation-protocol.md). The robustness and latency tables stay empty until their protocols run.
+The experiment results table holds the Milestone 4 clean evaluation (protocol `kw10-clean-eval-v1`, docs/evaluation-protocol.md). The robustness table holds Milestone 5 (protocol `kw10-robustness-v1`, docs/robustness-protocol.md). The latency table stays empty until its protocol runs.
 
 ## Repository check log
 
@@ -41,7 +41,21 @@ Observation (superseded by the review-fix rows below): with the Milestone 1 code
 
 | Run ID | Split | Corruption | Severity | Seed | Accuracy | Accuracy degradation | Macro F1 | Macro F1 degradation | Protocol/artifact link | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | | |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | noise v1 | snr_20db | 1729 (per-example derived) | 0.9126 | +0.0513 | 0.9146 | +0.0493 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/noise/snr_20db/` | achieved SNR 20.00 dB |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | noise v1 | snr_10db | 1729 (per-example derived) | 0.8540 | +0.1100 | 0.8596 | +0.1043 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/noise/snr_10db/` | achieved SNR 10.00 dB |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | noise v1 | snr_0db | 1729 (per-example derived) | 0.6679 | +0.2960 | 0.6604 | +0.3035 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/noise/snr_0db/` | achieved SNR 0.00 dB |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | reverb v1 | rt60_0.3s_drr_+6db | 1729 (per-example derived) | 0.9593 | +0.0047 | 0.9593 | +0.0046 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/reverb/rt60_0.3s_drr_+6db/` | DRR +6.0 dB, RIR 4800 samples |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | reverb v1 | rt60_0.6s_drr_0db | 1729 (per-example derived) | 0.9141 | +0.0498 | 0.9149 | +0.0489 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/reverb/rt60_0.6s_drr_0db/` | DRR +0.0 dB, RIR 9600 samples |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | reverb v1 | rt60_1.0s_drr_-6db | 1729 (per-example derived) | 0.8338 | +0.1301 | 0.8365 | +0.1274 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/reverb/rt60_1.0s_drr_-6db/` | DRR -6.0 dB, RIR 16000 samples |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | resample v1 | via_8000hz | 1729 (per-example derived) | 0.9497 | +0.0142 | 0.9497 | +0.0141 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/resample/via_8000hz/` | FIR 65 taps |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | resample v1 | via_4000hz | 1729 (per-example derived) | 0.8505 | +0.1134 | 0.8502 | +0.1137 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/resample/via_4000hz/` | FIR 129 taps |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | resample v1 | via_2000hz | 1729 (per-example derived) | 0.4639 | +0.5000 | 0.4270 | +0.5369 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/resample/via_2000hz/` | FIR 257 taps |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | clipping v1 | at_0.5_peak | 1729 (per-example derived) | 0.9470 | +0.0169 | 0.9470 | +0.0169 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/clipping/at_0.5_peak/` | mean clipped fraction 0.0185 |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | clipping v1 | at_0.25_peak | 1729 (per-example derived) | 0.9055 | +0.0584 | 0.9058 | +0.0581 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/clipping/at_0.25_peak/` | mean clipped fraction 0.0686 |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | clipping v1 | at_0.1_peak | 1729 (per-example derived) | 0.8152 | +0.1487 | 0.8124 | +0.1515 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/clipping/at_0.1_peak/` | mean clipped fraction 0.1631 |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | codec v1 | opus_level_0.9 | 1729 (per-example derived) | 0.9637 | +0.0002 | 0.9636 | +0.0003 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/codec/opus_level_0.9/` | mean 35.2 kbit/s (range 18.8-53.3) |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | codec v1 | opus_level_0.95 | 1729 (per-example derived) | 0.9659 | -0.0020 | 0.9659 | -0.0020 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/codec/opus_level_0.95/` | mean 24.3 kbit/s (range 15.7-39.6) |
+| `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` | test (4074) | codec v1 | opus_level_1.0 | 1729 (per-example derived) | 0.9354 | +0.0285 | 0.9356 | +0.0282 | `kw10-robustness-v1`; `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/conditions/codec/opus_level_1.0/` | mean 12.7 kbit/s (range 11.2-26.6) |
 
 ## Latency measurements
 
@@ -182,3 +196,92 @@ These are training records, not evaluation results. The validation loss and accu
 | 2026-09-28 | 4 | Same command with process-scoped `safe.directory` at clean commit `a3d208f` | Exit 0 in 18.7 s; run `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a`; values as above |
 | 2026-09-28 | 4 | Independent check script: re-verify every artifact SHA-256, reload `calibration.json` with its compatibility checks, and regenerate all official and duplicate-sensitivity metrics from the prediction files | All hashes matched; every aggregate regenerated identically |
 | 2026-09-28 | 4 | Reproducibility re-run of the same protocol through `evaluate()` into a scratch directory outside `runs/` (not a result) | Prediction CSVs, calibrated CSVs, and `calibration.json` byte-identical; metrics, duplicate sensitivity, and calibration identical |
+
+## Robustness (Milestone 5)
+
+**Protocol** `kw10-robustness-v1` ([docs/robustness-protocol.md](docs/robustness-protocol.md)) and its code were committed at `e024ee8` before any real robustness run.
+
+**Run** `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a`:
+- clean commit `e024ee8`, 8 threads, batch size 256, 323 s;
+- checkpoint `d21f8928…d267e` (the Milestone 4 checkpoint, unchanged; no retraining, tuning, or recalibration);
+- official test split, 4,074 rows, duplicates retained;
+- raw probabilities (`T = 1`).
+
+**Clean baseline:** the Milestone 4 official raw test metrics, from run `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` (report SHA-256 `2f9a0f5bdbbdb89cf1053c604e821ccd139950a73d6fe07ab4e059872d56b237`). Accuracy 0.9639, macro F1 0.9639, NLL 0.1011, ECE 0.0082.
+- **Clean-path check:** the robustness inference path reproduced all 4,074 Milestone 4 test logits bit-for-bit before any corruption was applied.
+
+**Codec backend** (pinned and checked): soundfile/libsndfile, `soundfile` 0.14.0, libsndfile 1.2.2, Ogg Opus. NumPy 2.5.3 provides the per-example random generators.
+
+**Accuracy and macro F1 degradation** are in the robustness results table above (degradation = clean − corrupted; positive means worse).
+
+**NLL, ECE, and the largest confusions** (degradation = clean − corrupted; for NLL and ECE, negative means worse):
+
+| Corruption | Severity | NLL | Δ NLL | ECE | Δ ECE | Largest confusions (true → predicted, count) |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| noise | snr_20db | 0.2710 | -0.1699 | 0.0317 | -0.0235 | up → off 118; on → off 38; left → yes 23 |
+| noise | snr_10db | 0.4245 | -0.3234 | 0.0413 | -0.0331 | up → off 160; left → yes 76; on → off 53 |
+| noise | snr_0db | 0.9863 | -0.8852 | 0.0518 | -0.0435 | left → yes 197; up → off 131; go → off 95 |
+| reverb | rt60_0.3s_drr_+6db | 0.1311 | -0.0301 | 0.0127 | -0.0044 | down → no 18; off → up 16; go → no 16 |
+| reverb | rt60_0.6s_drr_0db | 0.2477 | -0.1467 | 0.0133 | -0.0051 | up → off 44; on → off 41; left → yes 23 |
+| reverb | rt60_1.0s_drr_-6db | 0.5017 | -0.4006 | 0.0354 | -0.0272 | up → off 102; on → off 102; right → left 44 |
+| resample | via_8000hz | 0.1471 | -0.0460 | 0.0149 | -0.0067 | off → up 22; stop → up 22; down → no 15 |
+| resample | via_4000hz | 0.4508 | -0.3497 | 0.0483 | -0.0400 | stop → go 129; yes → left 60; down → go 58 |
+| resample | via_2000hz | 2.0112 | -1.9102 | 0.3077 | -0.2994 | up → off 306; right → go 216; stop → off 190 |
+| clipping | at_0.5_peak | 0.1588 | -0.0577 | 0.0172 | -0.0090 | off → up 25; go → no 24; down → no 19 |
+| clipping | at_0.25_peak | 0.3096 | -0.2085 | 0.0301 | -0.0219 | go → no 31; off → up 30; down → no 26 |
+| clipping | at_0.1_peak | 0.6271 | -0.5261 | 0.0693 | -0.0611 | right → no 42; go → no 39; right → left 37 |
+| codec | opus_level_0.9 | 0.1021 | -0.0010 | 0.0094 | -0.0012 | go → no 16; off → up 14; down → no 11 |
+| codec | opus_level_0.95 | 0.1026 | -0.0015 | 0.0081 | +0.0001 | off → up 17; go → no 14; on → off 12 |
+| codec | opus_level_1.0 | 0.1979 | -0.0968 | 0.0140 | -0.0058 | up → off 19; off → up 18; on → off 16 |
+
+**Reading the results:**
+- **Largest accuracy degradation:** resample/via_2000hz +0.5000; noise/snr_0db +0.2960; clipping/at_0.1_peak +0.1487; reverb/rt60_1.0s_drr_-6db +0.1301; resample/via_4000hz +0.1134.
+- **Resampling through 2 kHz** (1 kHz bandwidth) is the most damaging condition. Predictions collapse toward `go` (1309 predictions) and `off` (998).
+- **Opus** at `compression_level` 0.9 and 0.95 (mean about 35 and 24 kbit/s) leaves accuracy essentially unchanged. At 0.95 the corrupted accuracy is **higher** than clean: 3,935 vs 3,927 correct of 4,074, a negative degradation of -0.0020. This is reported as measured. With one corruption draw and no confidence intervals, it is not claimed as an improvement. At 0.9: 3,926 correct. Level 1.0 (about 12.7 kbit/s) costs 0.0285 accuracy (3,811 correct).
+- **ECE is worse than clean** in 14 of 15 conditions.
+- **Recurring confusions:** `up → off` is the largest confusion at 20 dB and 10 dB SNR (118, 160) and ties for largest under the most severe reverb (102, with `on → off`). `left → yes` grows with noise (23, 76, 197) and becomes the largest at 0 dB SNR.
+
+**Secondary: duplicate sensitivity** (one row per `audio_sha256`, 3,953 rows; degradation against the Milestone 4 dedup clean raw metrics; not the official result):
+
+| Corruption | Severity | Rows | Accuracy | Δ acc | Macro F1 | Δ F1 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| noise | snr_20db | 3953 | 0.9122 | +0.0524 | 0.9144 | +0.0503 |
+| noise | snr_10db | 3953 | 0.8548 | +0.1098 | 0.8605 | +0.1042 |
+| noise | snr_0db | 3953 | 0.6671 | +0.2975 | 0.6604 | +0.3042 |
+| reverb | rt60_0.3s_drr_+6db | 3953 | 0.9598 | +0.0048 | 0.9599 | +0.0048 |
+| reverb | rt60_0.6s_drr_0db | 3953 | 0.9147 | +0.0498 | 0.9158 | +0.0489 |
+| reverb | rt60_1.0s_drr_-6db | 3953 | 0.8325 | +0.1321 | 0.8355 | +0.1291 |
+| resample | via_8000hz | 3953 | 0.9514 | +0.0132 | 0.9515 | +0.0131 |
+| resample | via_4000hz | 3953 | 0.8520 | +0.1126 | 0.8516 | +0.1131 |
+| resample | via_2000hz | 3953 | 0.4640 | +0.5006 | 0.4271 | +0.5376 |
+| clipping | at_0.5_peak | 3953 | 0.9484 | +0.0162 | 0.9485 | +0.0162 |
+| clipping | at_0.25_peak | 3953 | 0.9074 | +0.0572 | 0.9078 | +0.0568 |
+| clipping | at_0.1_peak | 3953 | 0.8181 | +0.1465 | 0.8158 | +0.1488 |
+| codec | opus_level_0.9 | 3953 | 0.9643 | +0.0003 | 0.9644 | +0.0003 |
+| codec | opus_level_0.95 | 3953 | 0.9664 | -0.0018 | 0.9664 | -0.0018 |
+| codec | opus_level_1.0 | 3953 | 0.9368 | +0.0278 | 0.9370 | +0.0276 |
+
+**Failures and non-runs:** none. All 15 conditions ran on all 4,074 test clips, and no clip failed validation.
+
+**Limitations:**
+- The corruptions are synthetic and procedural: white noise, an exponential-decay RIR, one resampler design, peak-relative symmetric clipping, and one codec family at three `compression_level` settings.
+- One corruption draw per clip, one model, and one seed, so there are no confidence intervals. Small differences, such as the Opus 0.9 and 0.95 rows, should not be over-read.
+- Codec bitrate is only indirectly controlled and varies per clip (reported above).
+- Bit-exactness is guaranteed only on the same platform and library versions.
+- The duplicate, near-duplicate, closed-set, and clean-trained limitations of Milestone 4 carry over.
+
+**Artifacts** are under the git-ignored `runs/20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a/`:
+- `conditions/<corruption>/<severity>/predictions.csv` and `corruption_manifest.csv` (per-clip seed, output SHA-256, and measurements);
+- `report.json` (full precision, confusion matrices, per-class metrics, measurement summaries, artifact SHA-256) and `report.md`;
+- `summary.json`.
+
+### Commands (Milestone 5)
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-28 | 5 | `uv add "soundfile>=0.13"` (later tightened to `>=0.14`) and `uv lock` | Added `soundfile` 0.14.0 (bundled libsndfile 1.2.2), `cffi` 2.1.1, and `pycparser` 3.0 to the lockfile |
+| 2026-09-28 | 5 | Backend probe on synthetic signals only: Opus encode/decode at several `compression_level` values | Decoded 16 kHz mono with exact frame counts and lag 0. Decoded samples were identical across repeated encodes; the encoded bytes differ only in the Ogg serial number and CRC. |
+| 2026-09-28 | 5 | `uv run python scripts/check.py` on the tree committed as `e024ee8` | First attempt: the dist check failed, because its isolated `uv sync` picked a cached Python 3.10 with no cached `cffi` cp310 wheel. Fixed by pinning `--python sys.executable` in `check_dist.py`. Final: format 75 files, lint passed, mypy no issues in 60 files, pytest 435 passed, dist 31-file wheel with 4 smoke tests passed; exit 0. |
+| 2026-09-28 | 5 | `uv run python scripts/evaluate_robustness.py --config configs/kw10_cnn_baseline_robustness.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` at the checkpoint-provenance gate; no run directory created |
+| 2026-09-28 | 5 | Same command with process-scoped `safe.directory` at clean commit `e024ee8` | Exit 0 in 5 min 29 s; run `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a`; 15 conditions completed |
+| 2026-09-28 | 5 | Independent verification script (outside the package) | All 30 artifact hashes matched. All 4,074 source test files re-hashed unchanged. Every condition's metrics and degradation regenerated identically from its predictions file. For 25 random clips per condition, the corruption recomputed from source matched the recorded seed and output SHA-256. |
