@@ -1,0 +1,7 @@
+# Minimal example configuration; validated by robust_streaming_ml.config.
+# Used by the test suite. Not an experiment: no dataset or model is defined yet.
+name: example
+seed: 1234
+deterministic: true
+run:
+  output_root: runs

@@ -10,14 +10,71 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "Project contributors" }]
-dependencies = []
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Typing :: Typed",
+]
+dependencies = [
+  "numpy>=1.26",
+  "pydantic>=2.6",
+  "pyyaml>=6.0",
+  "torch>=2.2",
+]
 
-[project.optional-dependencies]
-dev = ["pytest>=8.0"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-addopts = "-ra"
+[dependency-groups]
+dev = [
+  "mypy>=1.10",
+  "pytest>=8.0",
+  "ruff>=0.5",
+  "types-PyYAML>=6.0",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/robust_streaming_ml"]
+
+# CPU-only PyTorch wheels keep the environment small and match the CPU
+# inference target in DESIGN.md. Used by `uv sync`/`uv lock`.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+xfail_strict = true
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests", "scripts"]
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+  "SIM", # flake8-simplify
+  "PTH", # prefer pathlib
+  "RUF", # ruff-specific
+  "NPY", # numpy-specific
+]
+
+[tool.mypy]
+strict = true
+files = ["src", "tests", "scripts"]
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
