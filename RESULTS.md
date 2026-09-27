@@ -1,6 +1,6 @@
 # Results
 
-No experiment results exist yet. Do not populate the experiment, robustness, or latency tables until runs are reproducible and artifacts are retained.
+The experiment results table holds the Milestone 4 clean evaluation, protocol `kw10-clean-eval-v1` (docs/evaluation-protocol.md). The robustness and latency tables stay empty until their protocols run.
 
 ## Repository check log
 
@@ -32,7 +32,10 @@ Observation (superseded by the review-fix rows below): with the Milestone 1 code
 
 | Run ID | Dataset/version | Split manifest | Model/config | Seed | Split | Accuracy | Macro F1 | ECE | NLL | Artifact link | Notes |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | | | |
+| `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` | Speech Commands v0.02, 10 labels | `f811a20d…ab6131c` | `kws_cnn_v1` checkpoint `best.pt` (epoch 18, `d21f8928…d267e`), `configs/kw10_cnn_baseline_eval.yaml` | 1234 | validation (3703) | 0.9614 | 0.9614 | 0.0125 | 0.1380 | `runs/20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a/report.json` | raw probabilities (T = 1) |
+| `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` | Speech Commands v0.02, 10 labels | `f811a20d…ab6131c` | `kws_cnn_v1` checkpoint `best.pt` (epoch 18, `d21f8928…d267e`), `configs/kw10_cnn_baseline_eval.yaml` | 1234 | validation (3703) | 0.9614 | 0.9614 | 0.0075 | 0.1282 | `runs/20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a/report.json` | temperature T = 1.3921; in-sample (T fitted on this split) |
+| `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` | Speech Commands v0.02, 10 labels | `f811a20d…ab6131c` | `kws_cnn_v1` checkpoint `best.pt` (epoch 18, `d21f8928…d267e`), `configs/kw10_cnn_baseline_eval.yaml` | 1234 | test (4074) | 0.9639 | 0.9639 | 0.0082 | 0.1011 | `runs/20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a/report.json` | raw probabilities (T = 1) |
+| `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` | Speech Commands v0.02, 10 labels | `f811a20d…ab6131c` | `kws_cnn_v1` checkpoint `best.pt` (epoch 18, `d21f8928…d267e`), `configs/kw10_cnn_baseline_eval.yaml` | 1234 | test (4074) | 0.9639 | 0.9639 | 0.0081 | 0.1019 | `runs/20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a/report.json` | temperature T = 1.3921; held-out |
 
 ## Robustness results
 
@@ -127,3 +130,55 @@ These are training records, not evaluation results. The validation loss and accu
 | 2026-09-28 | 3 | `uv run python scripts/train_baseline.py --config configs/kw10_cnn_baseline.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` before `start_run`; no `runs/` directory created |
 | 2026-09-28 | 3 | Same command with process-scoped `safe.directory` (`GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0`) at clean commit `5babe3f` | Exit 0 after 32 min 24 s; run `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf` as in the table above |
 | 2026-09-28 | 3 | `load_checkpoint(best.pt, expect_manifest_sha256=…, expect_labels=…, expect_window=…, expect_features=…)` via `uv run python` | Loaded: epoch 18, source `5babe3f` (clean), splits used train and validation, SHA-256 matched the sidecar |
+
+## Evaluation (Milestone 4)
+
+**Protocol** `kw10-clean-eval-v1` ([docs/evaluation-protocol.md](docs/evaluation-protocol.md)) was committed at `a3d208f` before any evaluation ran.
+
+**Run** `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a`:
+- clean commit `a3d208f`, seed 1234, deterministic, 8 threads, batch size 256;
+- checkpoint `runs/20260927T210911Z_kw10-cnn-baseline_6c9d6cdf/checkpoints/best.pt` (SHA-256 `d21f89283a128820e93b00d6e104805b3423fd47f2ed8791ba7775d5bf9d267e`), from training run `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf`, epoch 18, trained at clean commit `5babe3f`;
+- manifest `f811a20d…ab6131c`; validation 3,703 rows, test 4,074 rows (train not loaded).
+
+**Calibration:** temperature scaling fitted on the **validation predictions only** (3,703 rows):
+- `T = 1.3921393146428631` (`β = 1/T = 0.7183189135467654`), not at a search bound;
+- validation NLL 0.1380 → 0.1282 (in-sample);
+- the fit input is `predictions/validation.csv`, SHA-256 `f2bf21f1…dac378`. `calibration.json` was written before any test inference.
+
+**Official results** (all rows, duplicates retained) are in the experiment results table above. The official test evaluation ran once for this protocol and checkpoint. One further reproducibility re-run (identical outputs, below) was not used for anything, and nothing was selected or changed after seeing test results.
+
+**Reading the results:**
+- **Raw vs calibrated:** temperature scaling cannot change the argmax, so accuracy, macro F1, and the confusion matrix are identical raw and calibrated.
+  - On **test**, calibration lowered ECE slightly (0.0082 → 0.0081) and raised NLL slightly (0.1011 → 0.1019). **The in-sample validation improvement did not carry over to test NLL.**
+  - Both are reported; the raw result is primary.
+- **Test errors:** 147 of 4,074 (accuracy 0.9639).
+- **Largest test confusions** (true → predicted): go → no: 15; on → off: 13; down → no: 11; off → up: 10; up → off: 9.
+- **Test per-class F1** (raw), in label order (yes, no, up, down, left, right, on, off, stop, go): 0.9786 | 0.9591 | 0.9548 | 0.9471 | 0.9674 | 0.9898 | 0.9614 | 0.9446 | 0.9902 | 0.9456.
+- **Consistency check:** raw validation accuracy equals Milestone 3's training-time validation accuracy for this checkpoint exactly (0.9613826627059141). Validation NLL agrees to about 1e-8 (0.1379662737 vs 0.1379662621); training computed it in float32, evaluation in float64.
+
+**Secondary, duplicate-content sensitivity** (one row per `audio_sha256`; not the official result):
+
+| Split | Probabilities | Rows kept | Accuracy | Macro F1 | NLL | ECE |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| validation | raw | 3692 (11 removed) | 0.9613 | 0.9613 | 0.1384 | 0.0125 |
+| validation | calibrated | 3692 (11 removed) | 0.9613 | 0.9613 | 0.1285 | 0.0076 |
+| test | raw | 3953 (121 removed) | 0.9646 | 0.9646 | 0.0984 | 0.0075 |
+| test | calibrated | 3953 (121 removed) | 0.9646 | 0.9646 | 0.0998 | 0.0083 |
+
+**Limitations:**
+- **Duplicates:** the official numbers count 121 redundant test copies (119 groups, 240 files) and 11 validation copies (11 groups, 22 files); every group is one speaker and one label. The sensitivity view above shows the effect.
+- **Near-duplicates** are not detected.
+- **Closed set:** a 10-label classifier on clean 1 s clips; no silence or unknown speech. These results say nothing about rejecting other speech, robustness, or streaming.
+- **Single run:** one model trained with one seed; no confidence intervals.
+- **ECE** uses 15 equal-width bins. Most test predictions fall in the top bin (3,718 of 4,074 have confidence ≥ 14/15).
+- **Artifacts** are under the git-ignored `runs/20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a/`: `predictions/{validation,test}.csv` (logits and raw probabilities), `predictions/*_calibrated.csv`, `calibration.json`, `report.json` (full precision, per-class metrics, confusion matrices, ECE bins, artifact SHA-256), `report.md`, and `summary.json`.
+
+### Commands (Milestone 4)
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-28 | 4 | `uv run python scripts/check.py` on the tree committed as `a3d208f` (Milestone 2 integration test included) | Format: 66 files; lint passed; mypy: no issues in 52 files; pytest: 382 passed; dist: 27-file wheel, 4 smoke tests passed; exit 0 |
+| 2026-09-28 | 4 | `uv run python scripts/evaluate_baseline.py --config configs/kw10_cnn_baseline_eval.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` during the checkpoint-provenance gate; no run directory created |
+| 2026-09-28 | 4 | Same command with process-scoped `safe.directory` at clean commit `a3d208f` | Exit 0 in 18.7 s; run `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a`; values as above |
+| 2026-09-28 | 4 | Independent check script: re-verify every artifact SHA-256, reload `calibration.json` with its compatibility checks, and regenerate all official and duplicate-sensitivity metrics from the prediction files | All hashes matched; every aggregate regenerated identically |
+| 2026-09-28 | 4 | Reproducibility re-run of the same protocol through `evaluate()` into a scratch directory outside `runs/` (not a result) | Prediction CSVs, calibrated CSVs, and `calibration.json` byte-identical; metrics, duplicate sensitivity, and calibration identical |

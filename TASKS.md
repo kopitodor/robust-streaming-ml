@@ -46,7 +46,8 @@
 
 - [x] Implement accuracy, macro F1, confusion matrix, ECE, and NLL.
   - `evaluation/metrics.py`, defined in `docs/evaluation-protocol.md` §5: zero-division gives 0, the confusion matrix uses a fixed label order, NLL is computed from float64 log-softmax, and ECE is top-label with 15 equal-width bins.
-- [ ] Add validation/test evaluation reports and prediction artifacts.
+- [x] Add validation/test evaluation reports and prediction artifacts.
+  - `scripts/evaluate_baseline.py`: formal run `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` (commit `a3d208f`, checkpoint `d21f8928…`). It wrote the prediction CSVs, `calibration.json`, `report.json`/`.md`, and `summary.json`. Results and limitations are in RESULTS.md.
 - [x] Implement and document a calibration procedure if justified by validation data.
   - Temperature scaling (`evaluation/calibration.py`): a golden-section search on validation NLL over `β = 1/T` in [0.05, 20], fitted only on validation (any other split is refused) and persisted in `calibration.json` with compatibility metadata. Raw and calibrated results are always both reported; the fitted value is in RESULTS.md.
 - [x] Verify metrics against fixed fixtures.

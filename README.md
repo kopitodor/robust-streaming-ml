@@ -148,4 +148,4 @@ A duplicate-content sensitivity view is reported separately and never replaces t
 
 ## Status
 
-Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestone 3 (baseline training) is complete: one recorded baseline run, with the test split unused (see `RESULTS.md`). Next: Milestone 4 (evaluation) in `TASKS.md`.
+Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestone 3 (baseline training) and Milestone 4 (clean evaluation and calibration, protocol `kw10-clean-eval-v1`) are complete; see `RESULTS.md`. Next: Milestone 5 (robustness suite) in `TASKS.md`.
