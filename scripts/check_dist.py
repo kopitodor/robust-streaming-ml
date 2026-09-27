@@ -33,6 +33,8 @@ PACKAGE = "robust_streaming_ml"
 REQUIRED_WHEEL_FILES = {
     f"{PACKAGE}/__init__.py",
     f"{PACKAGE}/config.py",
+    f"{PACKAGE}/data/__init__.py",
+    f"{PACKAGE}/data/acquisition.py",
     f"{PACKAGE}/py.typed",
     f"{PACKAGE}/run_dir.py",
     f"{PACKAGE}/seed.py",

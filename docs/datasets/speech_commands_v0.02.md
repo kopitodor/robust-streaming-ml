@@ -22,7 +22,7 @@ The archive lives in the git-ignored folder `data/raw/speech_commands_v0.02.tar.
 | `license_file_sha256` | `fd3a263fe19ed8faa9068b43abaebafc02c77897b0c6fc09abc04bb592e5f16e` (18651 bytes) |
 | `attribution_text` | See "Attribution" below. |
 | `redistribution_notes` | CC BY 4.0 allows redistribution with attribution and an indication of changes. This project redistributes **no audio**. The committed manifest (paths, hashes, audio metadata) will carry the attribution below. |
-| `license_verified_by` / `license_verified_on` | **Pending human sign-off.** Claude (AI assistant) read `LICENSE` and `README.md` on 2026-09-27. The contract requires a person to confirm the license. |
+| `license_verified_by` / `license_verified_on` | **Project owner, 2026-09-27.** The owner approved using Speech Commands v0.02 under CC BY 4.0 for this portfolio project and accepted the attribution requirements recorded below. Claude (AI assistant) read `LICENSE` and `README.md` on the same date and prepared this record. |
 
 Other top-level files, with SHA-256 values computed locally:
 

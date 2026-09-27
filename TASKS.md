@@ -17,8 +17,9 @@
   - Speech Commands v2 (`v0.02`), 10 labels, official validation/test lists; `_silence_`/`_unknown_` out of scope. See `docs/decisions/0001-dataset-speech-commands-v2.md` and `docs/data-contract.md`.
 - [x] Verify and record source, version, archive SHA-256, license text, and attribution from the actual download (data contract section 1).
   - `docs/datasets/speech_commands_v0.02.md`: archive SHA-256 pinned (MD5 matches the server's published hash), CC BY 4.0 read from `LICENSE`, attribution and citation recorded, split lists cross-checked structurally.
-- [ ] Human sign-off on the license (`license_verified_by` / `license_verified_on` in the verification record).
-- [ ] Implement acquisition without committing data.
+- [x] Human sign-off on the license (`license_verified_by` / `license_verified_on` in the verification record): project owner, 2026-09-27.
+- [x] Implement acquisition without committing data.
+  - `robust_streaming_ml.data.acquisition` + `scripts/acquire_speech_commands.py`: pinned SHA-256/size download over HTTPS, safe extraction (no absolute/`..`/link/device members), pinned-file hash checks, idempotent re-runs; tested on synthetic archives. `.gitignore` now anchors `/data/` so the `data` package is not ignored.
 - [ ] Generate the manifest CSV and JSON sidecar exactly per the data contract schema (section 7), deterministically.
 - [ ] Implement the contract's validation rules (sections 2–6) with tests on small synthetic fixtures: format/duration, labels, split-list handling, duplicates, and speaker leakage.
 

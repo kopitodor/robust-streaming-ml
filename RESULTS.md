@@ -81,3 +81,13 @@ Data verification only; these are not experiment results. Details and all values
 | 2026-09-27 | 2 | `curl -fsSL --retry 3 -o data/raw/speech_commands_v0.02.tar.gz https://storage.googleapis.com/download.tensorflow.org/data/speech_commands_v0.02.tar.gz` | Exit 0; 2428923189 bytes; completed 2026-09-27T18:45:33Z |
 | 2026-09-27 | 2 | Python `hashlib` over the archive | SHA-256 `af14739e…68ff58`; MD5 matches the server's `x-goog-hash` and ETag |
 | 2026-09-27 | 2 | Python `tarfile` listing, plus extraction of `LICENSE`, `README.md`, and both split lists | 105,829 word `.wav` files (matches README); lists clean and disjoint; 10-keyword subset 30769/3703/4074 train/validation/test; 0 speakers crossing splits; `LICENSE` is CC BY 4.0 |
+
+### Acquisition implementation
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-27 | 2 | `uv run python scripts/check.py` (first run with the acquisition code) | Failed at dist: the wheel was missing `robust_streaming_ml/data/*.py`, because the unanchored `data/` pattern in `.gitignore` also excluded the package folder. Fixed by anchoring it to `/data/`. |
+| 2026-09-27 | 2 | `uv run python scripts/check.py` (after the fix) | Format: 28 files; lint passed; mypy: no issues in 16 files; pytest: 99 passed (21 acquisition tests on synthetic archives); dist: 10-file wheel, 4 smoke tests passed; exit 0 |
+| 2026-09-27 | 2 | `uv run python scripts/acquire_speech_commands.py` (archive already downloaded) | Exit 0 in 2m45s; archive re-verified against the pinned SHA-256; 105,841 files extracted to `data/raw/speech_commands_v0.02/`; pinned `LICENSE`, `README.md`, and split-list hashes matched |
+| 2026-09-27 | 2 | Same command, re-run | Exit 0 in 2.7s; verified archive and completed extraction reused |
+| 2026-09-27 | 2 | `git status --short --ignored` | `data/` ignored; no dataset files staged or tracked |

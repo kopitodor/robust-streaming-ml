@@ -16,7 +16,7 @@ dist/
 *.egg-info/
 
 # Data, experiment artifacts, and secrets
-data/
+/data/
 artifacts/
 checkpoints/
 runs/

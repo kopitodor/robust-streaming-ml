@@ -71,7 +71,17 @@ The distribution check needs `uv` on PATH and runs offline from the local uv cac
 - Every run writes to its own directory `<run.output_root>/<run_id>/` (default root `runs/`), where `run_id` is `<UTC timestamp>_<experiment name>_<8 hex chars>`. Existing run directories are never reused or overwritten.
 - Each run directory contains `config.yaml` (the validated configuration used) and `metadata.json`: run ID, UTC creation time, config SHA-256, `source` (git `commit` and `dirty`; dirty covers modified tracked files and untracked, non-ignored files), `seeding` (the seed and determinism state observed after seeding was applied: `torch_deterministic_algorithms`, `cudnn_deterministic`, `cudnn_benchmark`, `PYTHONHASHSEED`, `CUBLAS_WORKSPACE_CONFIG`), and `environment` (Python/platform/package versions, PyTorch runtime details, command-line arguments).
 - Later milestones add their outputs (checkpoints, predictions, reports) inside the same run directory.
-- `runs/`, `artifacts/`, `checkpoints/`, `data/`, and model files are git-ignored; do not commit them. Any result reported in `RESULTS.md` must reference a run directory created by `start_run`.
+- `runs/`, `artifacts/`, `checkpoints/`, the top-level `/data/` folder, and model files are git-ignored; do not commit them. Any result reported in `RESULTS.md` must reference a run directory created by `start_run`.
+
+## Dataset acquisition
+
+The dataset is Speech Commands v0.02 (10-keyword subset), licensed CC BY 4.0. Attribution is required: see [docs/datasets/speech_commands_v0.02.md](docs/datasets/speech_commands_v0.02.md) and the [data contract](docs/data-contract.md).
+
+```bash
+uv run python scripts/acquire_speech_commands.py
+```
+
+This downloads about 2.4 GB over HTTPS to `data/raw/speech_commands_v0.02.tar.gz` and accepts the archive only if its size and SHA-256 match the pinned values. It then extracts to `data/raw/speech_commands_v0.02/`. Extraction rejects absolute paths, `..`, links, and device files, and checks the pinned `LICENSE`, `README.md`, and split-list hashes. A completed extraction is marked by `.acquisition.json`. Re-running reuses a verified archive and a completed extraction. A mismatched archive or an incomplete directory stops the script with an error; it is never overwritten. Everything under the top-level `data/` folder is git-ignored. Manifest generation and audio validation are separate, not-yet-implemented steps.
 
 ## Status
 

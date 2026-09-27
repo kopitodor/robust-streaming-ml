@@ -26,5 +26,5 @@ def test_package_is_marked_typed() -> None:
 
 
 def test_public_modules_import() -> None:
-    for name in ("config", "seed", "run_dir"):
+    for name in ("config", "seed", "run_dir", "data.acquisition"):
         importlib.import_module(f"robust_streaming_ml.{name}")

@@ -1,6 +1,6 @@
 # 0001 — Dataset: Google Speech Commands v2, 10-keyword subset
 
-- **Status:** Accepted. The source, checksum, license, and attribution were verified against the downloaded archive on 2026-09-27 ([verification record](../datasets/speech_commands_v0.02.md)). Human sign-off on the license is still pending.
+- **Status:** Accepted. The source, checksum, license, and attribution were verified against the downloaded archive on 2026-09-27 ([verification record](../datasets/speech_commands_v0.02.md)). The project owner signed off on the license on 2026-09-27.
 - **Date:** 2026-09-27
 - **Milestone:** 2 (dataset acquisition and validation), planning only
 
