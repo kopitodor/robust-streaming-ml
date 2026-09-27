@@ -91,3 +91,17 @@ Data verification only; these are not experiment results. Details and all values
 | 2026-09-27 | 2 | `uv run python scripts/acquire_speech_commands.py` (archive already downloaded) | Exit 0 in 2m45s; archive re-verified against the pinned SHA-256; 105,841 files extracted to `data/raw/speech_commands_v0.02/`; pinned `LICENSE`, `README.md`, and split-list hashes matched |
 | 2026-09-27 | 2 | Same command, re-run | Exit 0 in 2.7s; verified archive and completed extraction reused |
 | 2026-09-27 | 2 | `git status --short --ignored` | `data/` ignored; no dataset files staged or tracked |
+
+### Validation and manifest
+
+Data validation only; these are not experiment results. Details: `docs/datasets/speech_commands_v0.02.md` and `docs/data-contract.md`.
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-27 | 2 | Read-only header/filename survey script over the 38,546 files in the ten label folders (before writing the validator) | All files: single 16-byte PCM `fmt ` chunk (mono, 16000 Hz, 16-bit) plus `data`; RIFF size matches; no trailing bytes; 8-hex-character speaker IDs; canonical indices; no stray entries. Took 223 s single-threaded (cold). |
+| 2026-09-27 | 2 | `uv run python scripts/check.py` at commit `67e6570` (integration test included because the local extraction is present) | Format: 38 files; lint passed; mypy: no issues in 26 files; pytest: 222 passed; dist: 14-file wheel, 4 smoke tests passed; exit 0 |
+| 2026-09-27 | 2 | `uv run pytest -m integration -v` | `test_local_extraction_satisfies_the_contract` PASSED (1 passed, 221 deselected, 38 s) |
+| 2026-09-27 | 2 | `RSML_DATA_DIR=<empty dir> uv run pytest tests/test_speech_commands.py -rs` | 2 passed, 1 skipped ("local Speech Commands extraction/archive not present") |
+| 2026-09-27 | 2 | `uv run python scripts/build_speech_commands_manifest.py` (git refuses this checkout: dubious ownership) | Exit 1: `ProvenanceError` before validation; nothing written under `data/manifests` or `data/reports` |
+| 2026-09-27 | 2 | Same command, with process-scoped `safe.directory` (`GIT_CONFIG_COUNT`/`KEY_0`/`VALUE_0`), at clean commit `67e6570` | Exit 0 in 39.6 s: passed, 0 errors; 38,546 rows (train 30,769 · validation 3,703 · test 4,074); manifest SHA-256 `f811a20d…ab6131c` equals the pin; warnings: 1,477 `duplicate_audio_within_split_label`; sidecar `source` = `67e6570…`, `dirty: false` |
+| 2026-09-27 | 2 | Same command again, then `cmp` and `diff` against the first run's outputs | Exit 0 in 28.4 s; CSV, JSON report, and Markdown report byte-identical; sidecar identical except `created_at_utc` |
