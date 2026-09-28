@@ -81,7 +81,8 @@
 
 ## 7. Benchmarking, documentation, and demo
 
-- [ ] Define reproducible CPU latency protocol including warm-up, iterations, threads, runtime, and hardware metadata.
+- [x] Define reproducible CPU latency protocol including warm-up, iterations, threads, runtime, and hardware metadata.
+  - `docs/benchmark-protocol.md` (`kw10-latency-v1`): the pinned Milestone 6 export on ONNX Runtime 1.30.0 CPU, batch 1, 1 s window and 100 ms hop. Primary path: the streaming step, including feature extraction. 1 and 4 threads; 500 warm-up and 5,000 timed steps × 3 repetitions; `perf_counter_ns`; nearest-rank p50/p95; raw timings kept. Committed before any measurement.
 - [ ] Record p50/p95 per-window latency without extrapolating to production.
 - [ ] Build the local user-facing demo.
 - [ ] Complete result tables, limitations, reproducibility instructions, and demo walkthrough.
