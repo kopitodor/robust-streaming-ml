@@ -151,6 +151,8 @@ def _frozen(samples: Float32) -> Float32:
 class StreamingWindower:
     """Incremental windowing of one stream (see the module docstring)."""
 
+    _buffer: Float32  # any length; declared so the empty initial array is not shape-typed
+
     def __init__(self, spec: StreamingSpec, *, sample_rate_hz: int) -> None:
         if sample_rate_hz != spec.sample_rate_hz:
             raise StreamingError(

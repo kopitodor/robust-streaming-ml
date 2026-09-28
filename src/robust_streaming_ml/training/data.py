@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import torch
 from torch.utils.data import DataLoader, Dataset, Sampler
 
@@ -192,7 +193,7 @@ class SplitAudio:
         return len(self.relative_paths)
 
 
-def _read_row(audio_root: Path, row: ManifestRow, window: WindowSection) -> np.ndarray:
+def _read_row(audio_root: Path, row: ManifestRow, window: WindowSection) -> npt.NDArray[np.int16]:
     path = audio_root / row.relative_path
     data = path.read_bytes()
     if hashlib.sha256(data).hexdigest() != row.sha256:

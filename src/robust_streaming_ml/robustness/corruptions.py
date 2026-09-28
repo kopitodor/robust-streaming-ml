@@ -180,7 +180,7 @@ def _lowpass(factor: int) -> Float64:
     taps = 32 * factor + 1
     m = np.arange(taps, dtype=np.float64) - (taps - 1) / 2
     h = np.sinc(m / factor) / factor * np.kaiser(taps, 8.0)
-    return h / h.sum()
+    return np.asarray(h / h.sum(), dtype=np.float64)
 
 
 def _resample(
@@ -195,7 +195,7 @@ def _resample(
     down = np.convolve(x, h)[centre : centre + x.size][::factor]
     up = np.zeros(down.size * factor, dtype=np.float64)
     up[::factor] = down * factor
-    y = np.convolve(up, h)[centre : centre + up.size][: x.size]
+    y = np.asarray(np.convolve(up, h)[centre : centre + up.size][: x.size], dtype=np.float64)
     return y, {"intermediate_frames": float(down.size), "filter_taps": float(h.size)}
 
 

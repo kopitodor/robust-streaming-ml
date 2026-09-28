@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 
 from robust_streaming_ml.config import parse_config
@@ -86,7 +87,7 @@ def setup(tmp_path: Path, package_repo: Path) -> Setup:
     return Setup(trained=trained, baseline_dir=baseline.run.path)
 
 
-def source_clips(setup: Setup) -> dict[str, np.ndarray]:
+def source_clips(setup: Setup) -> dict[str, npt.NDArray[np.int16]]:
     rows = [r for r in read_manifest(setup.trained.toy.built.manifest_path) if r.split == "test"]
     root = setup.trained.toy.toy.root
     clips = {
@@ -247,7 +248,7 @@ def test_cli_rejects_an_unpinned_baseline(setup: Setup) -> None:
 def test_clean_path_mismatch_fails_the_run(setup: Setup, monkeypatch: pytest.MonkeyPatch) -> None:
     original = infer_logits
 
-    def perturbed(*args: Any, **kwargs: Any) -> np.ndarray:
+    def perturbed(*args: Any, **kwargs: Any) -> npt.NDArray[np.float32]:
         return original(*args, **kwargs) + np.float32(1e-3)
 
     monkeypatch.setattr(robust_run, "infer_logits", perturbed)

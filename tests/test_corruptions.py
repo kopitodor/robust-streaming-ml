@@ -35,7 +35,8 @@ def speech_like(n: int = 12000, seed: int = 0) -> npt.NDArray[np.int16]:
     t = np.arange(n) / 16000
     env = np.hanning(n)
     x = 8000 * np.sin(2 * np.pi * 300 * t) * env + 3000 * np.sin(2 * np.pi * 3000 * t) * env
-    return (x + 300 * rng.standard_normal(n)).astype(np.int16)
+    clip: npt.NDArray[np.int16] = (x + 300 * rng.standard_normal(n)).astype(np.int16)
+    return clip
 
 
 # --- protocol definition ----------------------------------------------------------

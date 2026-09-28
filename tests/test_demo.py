@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pytest
 
 from robust_streaming_ml.config import load_config, parse_config
@@ -64,7 +65,7 @@ class DemoSetup:
             **kwargs,
         )
 
-    def audio(self, name: str, samples: np.ndarray, **wav: Any) -> Path:
+    def audio(self, name: str, samples: npt.NDArray[np.int16], **wav: Any) -> Path:
         path = self.tmp / name
         path.write_bytes(wav_bytes(samples, **wav))
         return path
@@ -79,7 +80,7 @@ def demo(tmp_path: Path, package_repo: Path, monkeypatch: pytest.MonkeyPatch) ->
     return DemoSetup(export=export, export_dir=result.run.path)
 
 
-def offline_reference(setup: DemoSetup, samples: np.ndarray) -> Any:
+def offline_reference(setup: DemoSetup, samples: npt.NDArray[Any]) -> Any:
     model, _ = load_verified_export(
         setup.export_dir, report_sha256=sha256_file(setup.export_dir / "report.json")
     )
