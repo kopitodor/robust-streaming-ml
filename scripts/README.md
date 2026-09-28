@@ -10,5 +10,6 @@ Explicit, documented entry points for acquisition, validation, training, evaluat
 - `evaluate_baseline.py`: formal clean evaluation of the pinned checkpoint through `start_run` (fails closed): `uv run python scripts/evaluate_baseline.py --config configs/kw10_cnn_baseline_eval.yaml`.
 - `train_baseline.py`: trains the baseline from a `TrainingConfig` YAML through `start_run` (fails closed): `uv run python scripts/train_baseline.py --config configs/kw10_cnn_baseline.yaml`.
 - `build_speech_commands_manifest.py`: validates the extraction against the data contract and writes the manifest, sidecar, and reports under `data/` (fails closed): `uv run python scripts/build_speech_commands_manifest.py`.
+- `build_pages.py`: builds the GitHub Pages site from `docs/index.html`. It rewrites relative repository links to commit-pinned GitHub URLs and fails on broken links or external resources. The Pages workflow runs it; it uses the standard library only.
 - `check.py` — runs formatting check, lint, type check, tests, and the distribution check: `uv run python scripts/check.py`.
 - `check_dist.py` — builds the wheel offline, installs it into an isolated temporary environment, and runs the import smoke tests there: `uv run python scripts/check_dist.py`.

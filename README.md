@@ -1,20 +1,14 @@
 # robust-streaming-ml
 
-A portfolio project: a reproducible, deployment-oriented streaming keyword classifier on Speech Commands v0.02, covering 10 keywords. It demonstrates ML and algorithms engineering practices:
-- validated data splits;
-- a small, documented CNN baseline;
-- calibrated evaluation;
-- controlled robustness testing;
-- streaming-window inference;
-- an ONNX export verified against PyTorch;
-- a documented CPU latency benchmark;
-- a local demo.
+A reproducible, deployment-oriented streaming keyword classifier for 10 spoken commands (Speech Commands v0.02). It covers verified data, calibrated held-out evaluation, a deterministic robustness suite, streaming inference, an ONNX export verified against PyTorch, a documented CPU latency benchmark, and a local demo. It is a portfolio project, not production software.
 
-The repository contains code, tests, protocols, and documentation only. The dataset, checkpoints, ONNX exports, run directories, and demo outputs are generated locally under git-ignored folders. Every measured number is in [RESULTS.md](RESULTS.md), tied to a run directory and a committed protocol. It is not a state-of-the-art, production, or real-time claim. See [DESIGN.md](DESIGN.md) for the design and acceptance status, and [TASKS.md](TASKS.md) for the delivery record.
+**[Showcase page](docs/index.html)** · [Measured results](RESULTS.md) · [Reproduce the pipeline](#reproducing-the-pipeline) · [Local demo](#local-demo) · [Key limitations](#key-limitations) · [Design and acceptance status](DESIGN.md)
+
+The showcase is a static page, `docs/index.html`. Once GitHub Pages is enabled for the repository (source: GitHub Actions), the [Pages workflow](.github/workflows/pages.yml) publishes it at `https://<owner>.github.io/<repository>/`.
 
 ## Results at a glance
 
-All from RESULTS.md, single model and seed, official test split (4,074 clips, duplicates retained):
+All values are from RESULTS.md: a single model and seed, on the official test split (4,074 clips, duplicates retained).
 
 | What | Measured |
 | --- | --- |
@@ -22,6 +16,21 @@ All from RESULTS.md, single model and seed, official test split (4,074 clips, du
 | Largest robustness degradation (`kw10-robustness-v1`) | accuracy drop 0.500 (0.9639 → 0.4639, resample via 2 kHz). Opus at `compression_level` 0.9 and 0.95 changes accuracy by at most 0.002. |
 | ONNX vs PyTorch parity (`kw10-onnx-v1`) | max \|Δlogit\| 1.8e-4 over 39,703 windows (tolerance 1e-2); streaming decision = clip-level prediction on 4,074/4,074 clips |
 | CPU latency (`kw10-latency-v1`, AMD Ryzen 7 5800H, 1 thread) | ONNX streaming step p50 2.43 ms, p95 2.71 ms; the PyTorch eager reference was faster (p50 1.95 ms) |
+
+## Key limitations
+
+- **Closed set of 10 commands** (`yes, no, up, down, left, right, on, off, stop, go`). Every input gets one of them; there is no silence or unknown-word rejection, and this is not general speech recognition.
+- **One model, one seed, one corruption draw:** no confidence intervals. The official test numbers include duplicate clips; a de-duplicated view is reported separately.
+- **Isolated 1 s clips and synthetic corruptions:** continuous or real-world audio was not evaluated.
+- **Latency** comes from one uncontrolled laptop, one runtime version, and one run. There is no production, real-time, or state-of-the-art claim.
+
+**Try the local demo.** It needs the locally generated ONNX export; see [Reproducing the pipeline](#reproducing-the-pipeline).
+
+```bash
+uv run python scripts/demo.py --audio path/to/clip.wav --corruption noise --severity snr_10db --open
+```
+
+The repository contains code, tests, protocols, and documentation only. The dataset, checkpoints, ONNX exports, run directories, and demo outputs are generated locally under git-ignored folders. Code is MIT-licensed ([LICENSE](LICENSE)); the dataset is CC BY 4.0 and is not redistributed. Every measured number in [RESULTS.md](RESULTS.md) is tied to a run directory and to a protocol committed before that run.
 
 ## Repository layout
 

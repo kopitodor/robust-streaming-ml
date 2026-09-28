@@ -2,6 +2,9 @@
 
 Protocols, dataset license records, decision records, and the demo walkthrough.
 
+- [index.html](index.html): the static public showcase page. It is published to GitHub Pages by `.github/workflows/pages.yml`, using `scripts/build_pages.py` to pin repository links to the published commit. It shows only values recorded in RESULTS.md, and `tests/test_showcase.py` checks them against it.
+- [linkedin.md](linkedin.md): draft LinkedIn project description, achievement bullets, and post, restricted to recorded results.
+
 - [demo.md](demo.md): the local, offline demo. It covers requirements, launch commands, what the terminal and HTML page show, how the output is produced, and limitations (closed set, no silence or unknown-word rejection, not a result, not production-ready).
 - [benchmark-protocol.md](benchmark-protocol.md): CPU latency protocol `kw10-latency-v1`. It covers the pinned ONNX export and runtime; the measured paths (the ONNX streaming step including feature extraction, `session.run` alone, and a PyTorch eager reference); thread settings; warm-up, iterations, and repetitions; the timer; nearest-rank p50 and p95; recorded hardware; and limitations. Written before any measurement.
 - [streaming-onnx-protocol.md](streaming-onnx-protocol.md): streaming contract `kw10-streaming-v1` (input, 1 s window, 100 ms hop, timestamps, no startup padding, one final partial window, short audio, reset, batch-1 per-window prediction, causal 5-window aggregation) and export/parity protocol `kw10-onnx-v1` (graph, opset 18, tensor contract, metadata checks, ONNX Runtime CPU, predeclared tolerances). Written before the implementation.
