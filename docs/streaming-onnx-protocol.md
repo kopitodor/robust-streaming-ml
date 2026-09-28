@@ -6,6 +6,11 @@ Milestone 6. This document was written and committed **before** the streaming an
 
 Results will go in [RESULTS.md](../RESULTS.md).
 
+**Implementation** (committed after this document, before any real run):
+- `robust_streaming_ml.streaming`: `windowing.py` and `classifier.py`;
+- `robust_streaming_ml.export`: `onnx_model.py`, `parity.py`, `config.py`, and `run.py`;
+- entry point `scripts/export_onnx.py`, with [`configs/kw10_cnn_baseline_onnx.yaml`](../configs/kw10_cnn_baseline_onnx.yaml).
+
 Nothing here retrains, tunes, or recalibrates the model, and nothing here measures latency (that is Milestone 7).
 
 ## 1. Fixed model and data
@@ -35,7 +40,7 @@ Nothing here retrains, tunes, or recalibrates the model, and nothing here measur
   - `start_sample` and `end_sample` (`start + 16000`, exclusive);
   - `valid_samples`, the number of real (not padded) samples;
   - `final_partial`;
-  - `emitted_at_sample`, the number of samples received when it was emitted.
+  - `emitted_at_sample`, the number of samples received when it was emitted, counted in stream time. That is `start_sample + 16000` for a full window, which the push delivering that sample emits however large the chunk, and `n` for the final window. Like every other field, it does not depend on chunking. *(Clarified while implementing, before any run.)*
 
 ### 2.2 Windows and hop
 

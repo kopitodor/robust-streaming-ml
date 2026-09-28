@@ -17,6 +17,12 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=1.26",
+  "onnx>=1.23",
+  # onnxruntime publishes wheels only (no sdist); 1.23.x is the last line with
+  # CPython 3.10 wheels. Formal runs pin 1.30.0 (docs/streaming-onnx-protocol.md).
+  "onnxruntime>=1.23,<1.24; python_version < '3.11'",
+  "onnxruntime>=1.23; python_version >= '3.11'",
+  "onnxscript>=0.7",
   "pydantic>=2.6",
   "pyyaml>=6.0",
   "soundfile>=0.14",
@@ -83,8 +89,8 @@ plugins = ["pydantic.mypy"]
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-# soundfile ships no type information; it is used only by the codec corruption.
-module = ["soundfile"]
+# soundfile (codec corruption) and onnxruntime (ONNX inference) ship no type information.
+module = ["soundfile", "onnxruntime"]
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]

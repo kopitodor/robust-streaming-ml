@@ -36,6 +36,12 @@ def test_public_modules_import() -> None:
         "robustness.corruptions",
         "robustness.config",
         "robustness.run",
+        "streaming.windowing",
+        "streaming.classifier",
+        "export.onnx_model",
+        "export.parity",
+        "export.config",
+        "export.run",
     )
     for name in (
         *modules,

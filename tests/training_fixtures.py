@@ -44,9 +44,9 @@ class ToyTraining:
         return parse_config(data, schema=TrainingConfig)
 
 
-def make_toy_training(tmp_path: Path) -> ToyTraining:
+def make_toy_training(tmp_path: Path, files: dict[str, bytes] | None = None) -> ToyTraining:
     """Build and validate a toy dataset (requires the ``package_repo`` fixture)."""
-    toy = build_toy(tmp_path, files=training_files())
+    toy = build_toy(tmp_path, files=training_files() if files is None else files)
     built = build_manifest(
         toy.spec,
         toy.root,

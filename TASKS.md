@@ -70,7 +70,9 @@
 
 - [x] Specify window, hop, padding, state, and aggregation semantics.
   - `docs/streaming-onnx-protocol.md`: `kw10-streaming-v1` (1 s window, 100 ms hop, no startup padding, one zero-padded final window, batch-1 per-window inference, causal mean of the last 5 windows) and `kw10-onnx-v1` (opset 18, tensor contract, ONNX Runtime 1.30.0 CPU, parity tolerances). Committed before any streaming or export code.
-- [ ] Implement streaming-window inference and tests for boundaries.
+- [x] Implement streaming-window inference and tests for boundaries.
+  - `streaming/windowing.py` (windower and an independent offline reference) and `streaming/classifier.py` (batch-1 prediction, causal aggregation, PyTorch backend).
+  - `tests/test_streaming.py` covers window and hop boundaries, arbitrary chunkings (bit-identical to offline), startup and final padding, short and empty audio, reset, timestamps and order, and independence from future audio.
 - [ ] Export ONNX with recorded opset and input contract.
 - [ ] Compare ONNX and PyTorch outputs using fixed fixtures.
 

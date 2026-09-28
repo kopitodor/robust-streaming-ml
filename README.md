@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), and the robustness suite (`robustness/`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), and ONNX export, runtime, and parity (`export/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -162,6 +162,33 @@ It fails closed on:
 - a failure to reproduce the Milestone 4 clean test logits bit-for-bit.
 
 It writes per-condition predictions and corruption manifests, plus `report.json` and `report.md`, with degradation = clean − corrupted.
+
+## Streaming and ONNX export
+
+```bash
+uv run python scripts/export_onnx.py --config configs/kw10_cnn_baseline_onnx.yaml
+```
+
+The protocols are [docs/streaming-onnx-protocol.md](docs/streaming-onnx-protocol.md):
+- **`kw10-streaming-v1`:**
+  - 1 s windows, 100 ms hop, integer sample timestamps;
+  - no startup padding, and one zero-padded final window;
+  - every window inferred on its own (batch 1) with raw probabilities;
+  - a causal mean over the last 5 windows;
+  - bit-identical to an independent offline reference for any chunking.
+- **`kw10-onnx-v1`:**
+  - the validated log-mel front end (`torch.stft` exported as ONNX `STFT`) plus the CNN, opset 18, `waveform [batch, 16000]` → `logits [batch, 10]`;
+  - metadata tying the model to the checkpoint, labels, features, manifest, source revision, and toolchain;
+  - ONNX Runtime 1.30.0 on `CPUExecutionProvider` only;
+  - predeclared parity tolerances (logits 1e-2, probabilities 1e-3).
+
+It fails closed on:
+- the checkpoint, manifest, and pinned Milestone 4 baseline gates;
+- the exact export toolchain (torch 2.14.0+cpu, onnx 1.23.0, onnxscript 0.7.2) and onnxruntime version;
+- a dirty tree;
+- a PyTorch path that does not reproduce the Milestone 4 test logits bit-for-bit.
+
+It writes `onnx/model.onnx` and its sidecar, then compares PyTorch and ONNX Runtime on every test clip and on concatenation streams of test clips. The outputs are `parity/*.csv`, `report.json`, `report.md`, and `summary.json`. A tolerance violation still writes the full report, but the run's status is `failed` and the command exits 1.
 
 ## Status
 

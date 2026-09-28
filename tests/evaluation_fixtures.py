@@ -51,8 +51,8 @@ class Trained:
         return parse_config(apply_overrides(self.raw(), overrides), schema=EvaluationConfig)
 
 
-def make_trained(tmp_path: Path) -> Trained:
+def make_trained(tmp_path: Path, files: dict[str, bytes] | None = None) -> Trained:
     """Train the toy model (requires the ``package_repo`` fixture for provenance)."""
-    toy = make_toy_training(tmp_path)
+    toy = make_toy_training(tmp_path, files)
     result = train(toy.config(), dataset_spec=toy.spec)
     return Trained(toy=toy, checkpoint=result.best_checkpoint, tmp=tmp_path)
