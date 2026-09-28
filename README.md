@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), and ONNX export, runtime, and parity (`export/`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), ONNX export, runtime, and parity (`export/`), and the CPU latency benchmark (`benchmark/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -189,6 +189,23 @@ It fails closed on:
 - a PyTorch path that does not reproduce the Milestone 4 test logits bit-for-bit.
 
 It writes `onnx/model.onnx` and its sidecar, then compares PyTorch and ONNX Runtime on every test clip and on concatenation streams of test clips. The outputs are `parity/*.csv`, `report.json`, `report.md`, and `summary.json`. A tolerance violation still writes the full report, but the run's status is `failed` and the command exits 1.
+
+## CPU latency benchmark
+
+```bash
+uv run python scripts/benchmark_latency.py --config configs/kw10_onnx_benchmark.yaml
+```
+
+This runs protocol `kw10-latency-v1` ([docs/benchmark-protocol.md](docs/benchmark-protocol.md)) on the pinned Milestone 6 ONNX export. The export's report SHA-256 is pinned and it must record passed parity.
+
+It times three paths, each at batch 1 with 1 and 4 threads:
+- the deployment-oriented **streaming step**: push 100 ms of audio, then window, ONNX Runtime inference (log-mel feature extraction is inside the graph), softmax, and aggregation;
+- `session.run` alone;
+- a PyTorch eager reference step.
+
+Each block has 500 warm-up steps and 5,000 individually timed steps, repeated 3 times. The benchmark reports nearest-rank p50/p95 and keeps every raw timing in `timings.csv`. It records the OS, CPU model, logical and physical cores, and runtime versions.
+
+It fails closed on the checkpoint, manifest, and export gates, the ONNX Runtime version, and a dirty tree. The numbers describe one local machine; they are not a production or real-time claim.
 
 ## Status
 

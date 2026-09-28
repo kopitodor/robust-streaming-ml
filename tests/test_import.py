@@ -42,6 +42,10 @@ def test_public_modules_import() -> None:
         "export.parity",
         "export.config",
         "export.run",
+        "benchmark.stats",
+        "benchmark.hardware",
+        "benchmark.config",
+        "benchmark.run",
     )
     for name in (
         *modules,

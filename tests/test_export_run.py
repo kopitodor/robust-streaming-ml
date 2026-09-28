@@ -7,7 +7,6 @@ import hashlib
 import io
 import json
 import runpy
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -15,11 +14,10 @@ import numpy as np
 import numpy.typing as npt
 import pytest
 
-from robust_streaming_ml.config import load_config, parse_config
+from robust_streaming_ml.config import load_config
 from robust_streaming_ml.data.manifest import read_manifest
 from robust_streaming_ml.evaluation.metrics import softmax
 from robust_streaming_ml.evaluation.predictions import infer_logits
-from robust_streaming_ml.evaluation.run import evaluate
 from robust_streaming_ml.export import onnx_model
 from robust_streaming_ml.export import run as export_run
 from robust_streaming_ml.export.config import ExportConfig
@@ -27,91 +25,27 @@ from robust_streaming_ml.export.onnx_model import (
     OnnxModelError,
     OnnxWindowBackend,
     export_onnx_bytes,
-    installed_versions,
     load_onnx_model,
 )
 from robust_streaming_ml.export.parity import causal_aggregates, compare_aggregates, compare_logits
 from robust_streaming_ml.export.run import (
     ExportError,
-    ExportResult,
     chunk_sizes,
-    export_and_verify,
     load_verified_export,
     split_chunks,
 )
 from robust_streaming_ml.robustness.config import RobustnessConfig
 from robust_streaming_ml.run_dir import ProvenanceError
-from tests.audio_fixtures import tone, wav_bytes
-from tests.evaluation_fixtures import Trained, apply_overrides, make_trained
-from tests.training_fixtures import training_files
+from tests.export_fixtures import ExportSetup as Setup
+from tests.export_fixtures import make_export_setup, pin_installed_versions
 
 LABELS = ("yes", "no")
 
 
-def files_with_long_test_clips() -> dict[str, bytes]:
-    """Toy files whose two test clips (16,000 and 12,000 frames) form a 9-window stream."""
-    files = training_files()
-    files["yes/dddddddd_nohash_0.wav"] = wav_bytes(tone(16000, 71))
-    files["no/dddddddd_nohash_0.wav"] = wav_bytes(tone(12000, 72))
-    return files
-
-
-@dataclass
-class Setup:
-    trained: Trained
-    baseline_dir: Path
-
-    @property
-    def tmp(self) -> Path:
-        return self.trained.tmp
-
-    def raw(self) -> dict[str, Any]:
-        evaluation = self.trained.raw()
-        return {
-            "schema_version": 1,
-            "name": "toy-onnx",
-            "seed": 7,
-            "deterministic": True,
-            "run": {"output_root": str(self.tmp / "export_runs")},
-            "data": evaluation["data"],
-            "checkpoint": evaluation["checkpoint"],
-            "baseline": {
-                "run_dir": str(self.baseline_dir),
-                "report_sha256": hashlib.sha256(
-                    (self.baseline_dir / "report.json").read_bytes()
-                ).hexdigest(),
-            },
-            "export": {"reference_batch_size": 3, "num_threads": 1},
-        }
-
-    def config(self, **overrides: Any) -> ExportConfig:
-        return parse_config(apply_overrides(self.raw(), overrides), schema=ExportConfig)
-
-    def run(self, **overrides: Any) -> ExportResult:
-        return export_and_verify(self.config(**overrides), dataset_spec=self.trained.toy.spec)
-
-    def runs(self) -> list[Path]:
-        root = self.tmp / "export_runs"
-        return sorted(root.iterdir()) if root.exists() else []
-
-
 @pytest.fixture
-def installed_pins(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Pin the protocol versions to the installed ones (CI locks another onnxruntime)."""
-    found = installed_versions()
-    monkeypatch.setattr(
-        onnx_model,
-        "EXPORT_TOOLCHAIN",
-        {k: str(found[k]) for k in ("torch", "onnx", "onnxscript")},
-    )
-    monkeypatch.setattr(onnx_model, "RUNTIME_VERSION", str(found["onnxruntime"]))
-
-
-@pytest.fixture
-def setup(tmp_path: Path, package_repo: Path, installed_pins: None) -> Setup:
-    trained = make_trained(tmp_path, files_with_long_test_clips())
-    baseline = evaluate(trained.config(), dataset_spec=trained.toy.spec)
-    return Setup(trained=trained, baseline_dir=baseline.run.path)
+def setup(tmp_path: Path, package_repo: Path, monkeypatch: pytest.MonkeyPatch) -> Setup:
+    pin_installed_versions(monkeypatch)
+    return make_export_setup(tmp_path)
 
 
 def read_csv(path: Path) -> list[dict[str, str]]:

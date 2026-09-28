@@ -33,6 +33,11 @@ ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = "robust_streaming_ml"
 REQUIRED_WHEEL_FILES = {
     f"{PACKAGE}/__init__.py",
+    f"{PACKAGE}/benchmark/__init__.py",
+    f"{PACKAGE}/benchmark/config.py",
+    f"{PACKAGE}/benchmark/hardware.py",
+    f"{PACKAGE}/benchmark/run.py",
+    f"{PACKAGE}/benchmark/stats.py",
     f"{PACKAGE}/checkpoint.py",
     f"{PACKAGE}/config.py",
     f"{PACKAGE}/data/__init__.py",

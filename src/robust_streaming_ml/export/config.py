@@ -10,6 +10,8 @@ runtime options that do not change the definitions.
 
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Literal
 
 from pydantic import Field
@@ -19,7 +21,9 @@ from robust_streaming_ml.evaluation.config import CheckpointRef
 from robust_streaming_ml.robustness.config import BaselineRef
 from robust_streaming_ml.training.config import DataSection
 
-__all__ = ["ExportConfig", "ExportSection"]
+__all__ = ["ExportConfig", "ExportRef", "ExportSection"]
+
+_SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class ExportSection(StrictModel):
@@ -37,3 +41,10 @@ class ExportConfig(ExperimentConfig):
     checkpoint: CheckpointRef
     baseline: BaselineRef
     export: ExportSection = Field(default_factory=ExportSection)
+
+
+class ExportRef(StrictModel):
+    """A completed export run whose ``report.json`` (with passed parity) is pinned."""
+
+    run_dir: Path = Field(strict=False)
+    report_sha256: str = Field(pattern=_SHA256.pattern)

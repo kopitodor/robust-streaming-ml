@@ -1,0 +1,32 @@
+# CPU latency benchmark of the Milestone 6 ONNX export (protocol kw10-latency-v1).
+# Schema: robust_streaming_ml.benchmark.config.BenchmarkConfig (schema_version 1).
+# Paths, thread configurations, warm-up, timed iterations, repetitions, timer, and
+# percentile method are fixed in code and documented in docs/benchmark-protocol.md;
+# this file only names the inputs.
+schema_version: 1
+name: kw10-onnx-latency
+seed: 1234               # recorded by start_run; the benchmark draws no random numbers
+deterministic: true
+run:
+  output_root: runs
+
+data:                    # benchmark audio: official test clips, via the manifest gate
+  dataset: speech_commands_v0.02_kw10
+  manifest_path: data/manifests/speech_commands_v0.02_kw10.csv
+  manifest_sha256: f811a20d030ee415fced0b3bc8d7471d6ebdbb4b3d4ee680ec62d8614ab6131c
+  validation_report_path: data/reports/speech_commands_v0.02_kw10_validation.json
+  audio_root: data/raw/speech_commands_v0.02
+  # Quoted: YAML 1.1 reads bare yes/no/on/off as booleans.
+  labels: ["yes", "no", "up", "down", "left", "right", "on", "off", "stop", "go"]
+  load_workers: 8
+
+checkpoint:              # source of the export; the PyTorch reference path (git-ignored)
+  path: runs/20260927T210911Z_kw10-cnn-baseline_6c9d6cdf/checkpoints/best.pt
+  sha256: d21f89283a128820e93b00d6e104805b3423fd47f2ed8791ba7775d5bf9d267e
+
+export:                  # Milestone 6 export run; its report must record passed parity
+  run_dir: runs/20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b
+  report_sha256: 7fddcac2a6e6bbc08b14620e35c1bc1550598e575ecb1f92b2aab9cc2da4fa60
+
+benchmark:
+  protocol: kw10-latency-v1
