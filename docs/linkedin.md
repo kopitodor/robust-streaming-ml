@@ -11,7 +11,8 @@ Draft text for the project owner's LinkedIn profile. Every number is copied from
 - a deterministic suite of 15 corruption conditions;
 - streaming-window inference;
 - an ONNX export verified against PyTorch;
-- a CPU latency benchmark whose protocol was committed before measuring.
+- a CPU latency benchmark whose protocol was committed before measuring;
+- local demos, including a live-microphone mode that runs entirely on the user's machine.
 
 Every reported number traces to a recorded run and a protocol committed before that run. Scope: closed-set command classification, not general speech recognition or production software. Stack: Python, PyTorch, ONNX, ONNX Runtime, NumPy, pytest, uv.
 

@@ -89,7 +89,7 @@ footer { margin-top:64px; padding-top:16px; border-top:1px solid var(--line); co
 <li><strong>Evaluate and calibrate</strong>Held-out test metrics, confusion matrix, 15-bin ECE; temperature scaling fitted on validation only. <a href="evaluation-protocol.md">protocol</a></li>
 <li><strong>Robustness</strong>Noise, reverberation, resampling, clipping, and Opus codec, 3 fixed severities each, with per-clip seeds. <a href="robustness-protocol.md">protocol</a></li>
 <li><strong>Stream and export</strong>1 s windows every 100 ms, batch-1 inference, causal mean of the last 5 windows; ONNX opset 18 including the STFT front end. <a href="streaming-onnx-protocol.md">protocol</a></li>
-<li><strong>Benchmark and demo</strong>CPU latency of the streaming step on ONNX Runtime; an offline local demo on the verified export. <a href="benchmark-protocol.md">protocol</a></li>
+<li><strong>Benchmark and demos</strong>CPU latency of the streaming step on ONNX Runtime; local file and live-microphone demos on the verified export. <a href="benchmark-protocol.md">protocol</a></li>
 </ol>
 </section>
 
@@ -169,9 +169,15 @@ footer { margin-top:64px; padding-top:16px; border-top:1px solid var(--line); co
 </section>
 
 <section id="demo">
-<h2>Local demo</h2>
-<p>An offline command-line demo streams a local 16 kHz mono 16-bit WAV file through the pinned, parity-verified ONNX export and writes a self-contained HTML page with per-window predictions, the causal aggregate, timing, and an optional comparison against one defined corruption. Nothing is uploaded and no server is used. It needs the locally generated export run; see <a href="demo.md">docs/demo.md</a>.</p>
-<pre><code>uv run python scripts/demo.py --audio path/to/clip.wav --corruption noise --severity snr_10db --open</code></pre>
+<h2>Local demos</h2>
+<p>Two local demos run the pinned, parity-verified ONNX export through the same streaming engine. Nothing is uploaded, and both need the locally generated export run.</p>
+<ul class="tight">
+<li><strong>File demo.</strong> Streams a 16 kHz mono 16-bit WAV file and writes a self-contained HTML report: per-window predictions, the causal aggregate, timing, and an optional comparison with one defined corruption. See <a href="demo.md">docs/demo.md</a>.</li>
+<li><strong>Live-microphone mode.</strong> A page served only on 127.0.0.1. After <em>Start listening</em> and microphone permission, the browser sends ordered 100 ms chunks, which are converted to 16 kHz PCM by a documented, deterministic resampler. Each window shows its label, confidence, timestamp, input level, the last-5-window aggregate with a stable indicator, and inference time. <em>Stop</em> gives the final decision, and <em>Reset</em> clears everything. The page states that it is a closed-set demo, not general speech recognition. See <a href="live-demo.md">docs/live-demo.md</a>.</li>
+</ul>
+<pre><code>uv run python scripts/demo.py --audio path/to/clip.wav --corruption noise --severity snr_10db --open
+uv run python scripts/live_demo.py --open</code></pre>
+<p class="muted">The live mode has automated API, ordering, reset, and audio-contract tests. It was manually tested in a browser with a test-audio stream standing in for the microphone; it was not tested with a real microphone by the developer.</p>
 </section>
 
 <section id="limitations">
