@@ -2,6 +2,7 @@
 
 Supporting protocol notes, dataset license records, demo instructions, and reproducibility reports will live here.
 
+- [streaming-onnx-protocol.md](streaming-onnx-protocol.md): streaming contract `kw10-streaming-v1` (input, 1 s window, 100 ms hop, timestamps, no startup padding, one final partial window, short audio, reset, batch-1 per-window prediction, causal 5-window aggregation) and export/parity protocol `kw10-onnx-v1` (graph, opset 18, tensor contract, metadata checks, ONNX Runtime CPU, predeclared tolerances). Written before the implementation.
 - [robustness-protocol.md](robustness-protocol.md): protocol `kw10-robustness-v1`, with its fixed inputs and gates, the 5 corruptions × 3 severities with parameters, seeds, the codec backend and licensing, output validation, degradation, the duplicate policy, and limitations.
 - [evaluation-protocol.md](evaluation-protocol.md): protocol `kw10-clean-eval-v1`. It defines the gates, test isolation, metric definitions (zero-division policy, 15-bin ECE), temperature scaling fitted on validation only, the duplicate policy, and the outputs.
 - [baseline.md](baseline.md): the Milestone 3 baseline: window and log-mel features, CNN shapes and parameter count, training procedure, determinism, checkpoint format, and run layout.
