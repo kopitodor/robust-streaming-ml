@@ -2,6 +2,7 @@
 
 Supporting protocol notes, dataset license records, demo instructions, and reproducibility reports will live here.
 
+- [demo.md](demo.md): the local, offline demo. It covers requirements, launch commands, what the terminal and HTML page show, how the output is produced, and limitations (closed set, no silence or unknown-word rejection, not a result, not production-ready).
 - [benchmark-protocol.md](benchmark-protocol.md): CPU latency protocol `kw10-latency-v1`. It covers the pinned ONNX export and runtime; the measured paths (the ONNX streaming step including feature extraction, `session.run` alone, and a PyTorch eager reference); thread settings; warm-up, iterations, and repetitions; the timer; nearest-rank p50 and p95; recorded hardware; and limitations. Written before any measurement.
 - [streaming-onnx-protocol.md](streaming-onnx-protocol.md): streaming contract `kw10-streaming-v1` (input, 1 s window, 100 ms hop, timestamps, no startup padding, one final partial window, short audio, reset, batch-1 per-window prediction, causal 5-window aggregation) and export/parity protocol `kw10-onnx-v1` (graph, opset 18, tensor contract, metadata checks, ONNX Runtime CPU, predeclared tolerances). Written before the implementation.
 - [robustness-protocol.md](robustness-protocol.md): protocol `kw10-robustness-v1`, with its fixed inputs and gates, the 5 corruptions × 3 severities with parameters, seeds, the codec backend and licensing, output validation, degradation, the duplicate policy, and limitations.

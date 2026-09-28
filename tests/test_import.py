@@ -46,6 +46,9 @@ def test_public_modules_import() -> None:
         "benchmark.hardware",
         "benchmark.config",
         "benchmark.run",
+        "demo.config",
+        "demo.app",
+        "demo.report",
     )
     for name in (
         *modules,

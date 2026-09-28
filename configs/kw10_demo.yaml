@@ -1,0 +1,18 @@
+# Local streaming demo on the Milestone 6 ONNX export (docs/demo.md).
+# Schema: robust_streaming_ml.demo.config.DemoConfig (schema_version 1).
+# The model, streaming contract (kw10-streaming-v1), and corruptions (kw10-robustness-v1)
+# are fixed; this file only pins the export and sets presentation options.
+schema_version: 1
+name: kw10-demo
+seed: 1234               # unused by the demo (corruption seeds come from kw10-robustness-v1)
+deterministic: true
+
+export:                  # Milestone 6 export run; its report must record passed parity
+  run_dir: runs/20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b
+  report_sha256: 7fddcac2a6e6bbc08b14620e35c1bc1550598e575ecb1f92b2aab9cc2da4fa60
+
+demo:
+  output_dir: artifacts/demo   # git-ignored
+  max_seconds: 60
+  intra_op_threads: 1
+  embed_audio: true            # playable audio as data: URIs; the page stays offline

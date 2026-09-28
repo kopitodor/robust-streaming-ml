@@ -6,7 +6,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), ONNX export, runtime, and parity (`export/`), and the CPU latency benchmark (`benchmark/`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), ONNX export, runtime, and parity (`export/`), the CPU latency benchmark (`benchmark/`), and the local demo (`demo/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -206,6 +206,22 @@ It times three paths, each at batch 1 with 1 and 4 threads:
 Each block has 500 warm-up steps and 5,000 individually timed steps, repeated 3 times. The benchmark reports nearest-rank p50/p95 and keeps every raw timing in `timings.csv`. It records the OS, CPU model, logical and physical cores, and runtime versions.
 
 It fails closed on the checkpoint, manifest, and export gates, the ONNX Runtime version, and a dirty tree. The numbers describe one local machine; they are not a production or real-time claim.
+
+## Local demo
+
+```bash
+uv run python scripts/demo.py --audio path/to/clip.wav
+uv run python scripts/demo.py --audio path/to/clip.wav --corruption noise --severity snr_10db --open
+uv run python scripts/demo.py --list-corruptions
+```
+
+The demo streams one local WAV file through the pinned, parity-verified ONNX model. The file must be 16 kHz mono 16-bit PCM, and nothing is resampled. Audio is pushed in 100 ms chunks, like a live source.
+
+It prints each window's predicted class, confidence, causal aggregate, and ONNX Runtime inference time, then the stream decision. It can also apply one `kw10-robustness-v1` corruption and show clean and corrupted output side by side.
+
+It writes a self-contained HTML page (no scripts or external resources) and a JSON record under the git-ignored `artifacts/demo/`. The page shows the model, checkpoint, export, dataset version, manifest, configuration, and limitations. Nothing is uploaded, and no server, share link, or network service is involved. `--open` opens the local page in your browser.
+
+Demo output is not a measured result, and the model has no silence or unknown-word rejection. See [docs/demo.md](docs/demo.md).
 
 ## Status
 
