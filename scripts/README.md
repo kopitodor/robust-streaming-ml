@@ -3,6 +3,7 @@
 Explicit, documented entry points for acquisition, validation, training, evaluation, export, benchmarking, and demo launch will live here.
 
 - `acquire_speech_commands.py`: downloads (if needed), verifies, and extracts Speech Commands v0.02 under `data/raw/`: `uv run python scripts/acquire_speech_commands.py`.
+- `live_demo.py`: the live-microphone mode of the demo. It serves a local page and API on http://127.0.0.1:8765/ (loopback only; audio stays in memory): `uv run python scripts/live_demo.py --open`.
 - `demo.py`: the local, offline streaming demo on the pinned ONNX model, with an optional corruption contrast; writes an HTML page and JSON under `artifacts/demo/`: `uv run python scripts/demo.py --audio path/to/clip.wav`.
 - `benchmark_latency.py`: CPU latency benchmark, protocol `kw10-latency-v1`, run through `start_run` (fails closed): `uv run python scripts/benchmark_latency.py --config configs/kw10_onnx_benchmark.yaml`.
 - `export_onnx.py`: ONNX export and PyTorch/ONNX Runtime parity, protocols `kw10-onnx-v1` and `kw10-streaming-v1`, run through `start_run`. It fails closed and exits 1 if parity fails: `uv run python scripts/export_onnx.py --config configs/kw10_cnn_baseline_onnx.yaml`.

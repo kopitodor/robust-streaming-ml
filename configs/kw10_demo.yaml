@@ -16,3 +16,8 @@ demo:
   max_seconds: 60
   intra_op_threads: 1
   embed_audio: true            # playable audio as data: URIs; the page stays offline
+
+live:                          # scripts/live_demo.py (docs/live-demo.md)
+  host: 127.0.0.1              # loopback only; any other address is refused
+  port: 8765
+  max_sessions: 4              # least recently used sessions are dropped

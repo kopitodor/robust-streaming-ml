@@ -16,7 +16,7 @@ from pydantic import Field
 from robust_streaming_ml.config import ExperimentConfig, StrictModel
 from robust_streaming_ml.export.config import ExportRef
 
-__all__ = ["DemoConfig", "DemoSection"]
+__all__ = ["DemoConfig", "DemoSection", "LiveSection"]
 
 
 class DemoSection(StrictModel):
@@ -28,7 +28,16 @@ class DemoSection(StrictModel):
     embed_audio: bool = Field(default=True, description="Embed playable audio in the page.")
 
 
+class LiveSection(StrictModel):
+    """Live-microphone mode; the server only ever binds a loopback address."""
+
+    host: str = Field(default="127.0.0.1", min_length=1)
+    port: int = Field(default=8765, ge=0, le=65535)
+    max_sessions: int = Field(default=4, ge=1, le=32)
+
+
 class DemoConfig(ExperimentConfig):
     schema_version: Literal[1] = 1
     export: ExportRef
     demo: DemoSection = Field(default_factory=DemoSection)
+    live: LiveSection = Field(default_factory=LiveSection)

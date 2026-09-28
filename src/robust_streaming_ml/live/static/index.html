@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live keyword demo (local)</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+<header>
+<p class="eyebrow">robust-streaming-ml &middot; local live demo</p>
+<h1>Live keyword-spotting demo</h1>
+<p class="warn"><strong>Closed-set demo: not general speech recognition, and not production software.</strong> The model knows only the 10 commands below. Every 1 s window, including silence, noise, and other words, is assigned one of them. There is no silence or unknown-word rejection.</p>
+<p class="muted">Audio goes only to this local server (127.0.0.1). It is processed in memory and never leaves this computer or reaches the disk.</p>
+<ul id="commands" class="commands" aria-label="The 10 supported commands"></ul>
+</header>
+
+<section class="controls" aria-label="Controls">
+<button id="start" type="button">Start listening</button>
+<button id="stop" type="button" disabled>Stop</button>
+<button id="reset" type="button" disabled>Reset</button>
+<p id="status" role="status" aria-live="polite" data-kind="info">Loading model information&hellip;</p>
+<p id="counters" class="muted"></p>
+</section>
+
+<section class="cards" aria-live="polite">
+<div class="card">
+<h2>Current window</h2>
+<div class="big" id="current-label">&ndash;</div>
+<div class="meter"><span id="current-bar"></span></div>
+<div id="current-detail" class="muted">no window yet</div>
+</div>
+<div class="card">
+<h2>Running aggregate (last 5 windows)</h2>
+<div class="big" id="aggregate-label">&ndash;</div>
+<div class="meter"><span id="aggregate-bar"></span></div>
+<div id="aggregate-detail" class="muted">&nbsp;</div>
+<div id="stability" class="badge" data-state="idle">no decision yet</div>
+</div>
+<div class="card" id="final-card" hidden>
+<h2>Final decision (after Stop)</h2>
+<div class="big" id="final-label"></div>
+<div id="final-detail" class="muted"></div>
+</div>
+</section>
+
+<section>
+<h2>Recent windows</h2>
+<p class="muted">Windows are 1 s long and one starts every 100 ms of audio. Times are in seconds from the start of the stream.</p>
+<div class="scroll">
+<table>
+<thead><tr><th>#</th><th>time (s)</th><th>window label</th><th>conf</th><th>aggregate</th><th>agg conf</th><th>stable</th><th>level (dBFS)</th><th>inference (ms)</th></tr></thead>
+<tbody id="history"></tbody>
+</table>
+</div>
+</section>
+
+<section>
+<h2>How it works</h2>
+<ul class="tight">
+<li><strong>Capture.</strong> After you press Start and allow the microphone, the browser captures raw audio at its own sample rate (echo cancellation, noise suppression, and automatic gain are requested off). It averages the channels to mono and sends 100 ms chunks, in order, to this local server.</li>
+<li><strong>Conversion.</strong> <span id="contract">&hellip;</span></li>
+<li><strong>Inference.</strong> The existing <code>kw10-streaming-v1</code> engine runs the pinned, parity-verified ONNX export: 1 s windows every 100 ms, each inferred on its own, and the aggregate is the mean of the last 5 windows' probabilities.</li>
+<li><strong>Stable indicator.</strong> <span id="stable-rule">&hellip;</span></li>
+<li><strong>Final decision.</strong> After Stop, the stream decision of <code>kw10-streaming-v1</code>: the aggregate of the last window.</li>
+<li><strong>Model.</strong> <span id="model">&hellip;</span></li>
+</ul>
+</section>
+
+<section>
+<h2>Limitations</h2>
+<ul class="tight" id="limitations"></ul>
+</section>
+</main>
+<script src="/app.js"></script>
+</body>
+</html>

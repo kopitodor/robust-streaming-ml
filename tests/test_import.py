@@ -49,6 +49,9 @@ def test_public_modules_import() -> None:
         "demo.config",
         "demo.app",
         "demo.report",
+        "live.resample",
+        "live.session",
+        "live.server",
     )
     for name in (
         *modules,
@@ -59,3 +62,9 @@ def test_public_modules_import() -> None:
         *extra,
     ):
         importlib.import_module(f"robust_streaming_ml.{name}")
+
+
+def test_live_demo_static_files_are_packaged() -> None:
+    static = resources.files("robust_streaming_ml.live").joinpath("static")
+    for name in ("index.html", "app.js", "capture-worklet.js", "style.css"):
+        assert static.joinpath(name).is_file(), name

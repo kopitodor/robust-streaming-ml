@@ -38,7 +38,11 @@ from robust_streaming_ml.data.speech_commands import SPEECH_COMMANDS_KW10
 from robust_streaming_ml.data.validation import DatasetSpec
 from robust_streaming_ml.data.wav import WavError, parse_wav
 from robust_streaming_ml.demo.config import DemoConfig
-from robust_streaming_ml.export.onnx_model import OnnxWindowBackend, create_session
+from robust_streaming_ml.export.onnx_model import (
+    LoadedOnnxModel,
+    OnnxWindowBackend,
+    create_session,
+)
 from robust_streaming_ml.export.run import load_verified_export
 from robust_streaming_ml.robustness.corruptions import (
     PROTOCOL_ID as CORRUPTION_PROTOCOL_ID,
@@ -64,6 +68,8 @@ __all__ = [
     "DemoAudio",
     "DemoError",
     "DemoResult",
+    "load_pinned_model",
+    "model_identity",
     "read_demo_wav",
     "run_demo",
     "stream_file",
@@ -218,6 +224,41 @@ def _source() -> dict[str, Any]:
     return {"commit": source.commit, "dirty": source.dirty}
 
 
+def load_pinned_model(
+    config: DemoConfig, dataset_spec: DatasetSpec = SPEECH_COMMANDS_KW10
+) -> tuple[LoadedOnnxModel, dict[str, Any]]:
+    """The pinned export (passed parity) for ``dataset_spec``'s labels and manifest."""
+    model, export_report = load_verified_export(
+        config.export.run_dir,
+        report_sha256=config.export.report_sha256,
+        expect_labels=dataset_spec.labels,
+    )
+    expected_manifest = {
+        "dataset": dataset_spec.manifest_name,
+        "sha256": dataset_spec.expected_manifest_sha256,
+    }
+    if model.metadata["manifest"] != expected_manifest:
+        raise DemoError(
+            f"the model records manifest {model.metadata['manifest']}, not {expected_manifest}"
+        )
+    return model, export_report
+
+
+def model_identity(
+    config: DemoConfig, model: LoadedOnnxModel, export_report: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "onnx_sha256": model.sha256,
+        "export_run_id": export_report["export_run_id"],
+        "export_report_sha256": config.export.report_sha256,
+        "export_parity_passed": export_report["passed"],
+        "checkpoint": model.metadata["checkpoint"],
+        "labels": list(model.labels),
+        "opset": model.metadata["contract"]["opset"],
+        "feature_fingerprint": model.metadata["preprocessing"]["feature_fingerprint"],
+    }
+
+
 def run_demo(
     config: DemoConfig,
     audio_path: Path,
@@ -239,19 +280,7 @@ def run_demo(
             chosen = (corruption_spec, corruption_spec.severity(severity))
         except CorruptionError as exc:
             raise DemoError(str(exc)) from exc
-    model, export_report = load_verified_export(
-        config.export.run_dir,
-        report_sha256=config.export.report_sha256,
-        expect_labels=dataset_spec.labels,
-    )
-    expected_manifest = {
-        "dataset": dataset_spec.manifest_name,
-        "sha256": dataset_spec.expected_manifest_sha256,
-    }
-    if model.metadata["manifest"] != expected_manifest:
-        raise DemoError(
-            f"the model records manifest {model.metadata['manifest']}, not {expected_manifest}"
-        )
+    model, export_report = load_pinned_model(config, dataset_spec)
     import onnxruntime
 
     session = create_session(model, intra_op_threads=config.demo.intra_op_threads)
@@ -294,14 +323,7 @@ def run_demo(
         "not_a_result": LIMITATIONS[0],
         "source": _source(),
         "model": {
-            "onnx_sha256": model.sha256,
-            "export_run_id": export_report["export_run_id"],
-            "export_report_sha256": config.export.report_sha256,
-            "export_parity_passed": export_report["passed"],
-            "checkpoint": model.metadata["checkpoint"],
-            "labels": list(labels),
-            "opset": model.metadata["contract"]["opset"],
-            "feature_fingerprint": model.metadata["preprocessing"]["feature_fingerprint"],
+            **model_identity(config, model, export_report),
             "runtime": {
                 "onnxruntime": str(onnxruntime.__version__),
                 "providers": list(session.get_providers()),

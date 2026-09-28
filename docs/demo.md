@@ -4,6 +4,8 @@ A local, offline demo of the streaming keyword classifier. It runs the pinned Mi
 
 It is a way to *look at* the model's behaviour on a file of your choice. It is **not** an evaluation, a benchmark, or a production system.
 
+For a live microphone in the browser, see [live-demo.md](live-demo.md). It uses the same pinned model and streaming engine.
+
 ## What you need
 
 - **The environment:** `uv sync`, which installs ONNX Runtime and the pinned `soundfile` codec backend.

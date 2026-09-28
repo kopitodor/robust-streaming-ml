@@ -24,17 +24,20 @@ All values are from RESULTS.md: a single model and seed, on the official test sp
 - **Isolated 1 s clips and synthetic corruptions:** continuous or real-world audio was not evaluated.
 - **Latency** comes from one uncontrolled laptop, one runtime version, and one run. There is no production, real-time, or state-of-the-art claim.
 
-**Try the local demo.** It needs the locally generated ONNX export; see [Reproducing the pipeline](#reproducing-the-pipeline).
+**Try the local demos.** Both need the locally generated ONNX export; see [Reproducing the pipeline](#reproducing-the-pipeline).
 
 ```bash
 uv run python scripts/demo.py --audio path/to/clip.wav --corruption noise --severity snr_10db --open
+uv run python scripts/live_demo.py --open
 ```
+
+The first streams a WAV file into a static HTML report. The second is a live-microphone page on http://127.0.0.1:8765/ that runs only on this computer; see [docs/live-demo.md](docs/live-demo.md).
 
 The repository contains code, tests, protocols, and documentation only. The dataset, checkpoints, ONNX exports, run directories, and demo outputs are generated locally under git-ignored folders. Code is MIT-licensed ([LICENSE](LICENSE)); the dataset is CC BY 4.0 and is not redistributed. Every measured number in [RESULTS.md](RESULTS.md) is tied to a run directory and to a protocol committed before that run.
 
 ## Repository layout
 
-- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), ONNX export, runtime, and parity (`export/`), the CPU latency benchmark (`benchmark/`), and the local demo (`demo/`)
+- `src/robust_streaming_ml/` — package code: configuration schema (`config.py`), seeding (`seed.py`), run start and run directories (`run_dir.py`), dataset acquisition/validation (`data/`), log-mel features (`features.py`), the CNN (`model.py`), checkpoints (`checkpoint.py`), training (`training/`), evaluation and calibration (`evaluation/`), the robustness suite (`robustness/`), streaming-window inference (`streaming/`), ONNX export, runtime, and parity (`export/`), the CPU latency benchmark (`benchmark/`), the local demo (`demo/`), and its live-microphone mode (`live/`)
 - `tests/` — automated tests (pytest)
 - `configs/` — versioned experiment configuration
 - `scripts/` — explicit operational entry points
@@ -250,6 +253,21 @@ It prints each window's predicted class, confidence, causal aggregate, and ONNX 
 It writes a self-contained HTML page (no scripts or external resources) and a JSON record under the git-ignored `artifacts/demo/`. The page shows the model, checkpoint, export, dataset version, manifest, configuration, and limitations. Nothing is uploaded, and no server, share link, or network service is involved. `--open` opens the local page in your browser.
 
 Demo output is not a measured result, and the model has no silence or unknown-word rejection. See [docs/demo.md](docs/demo.md).
+
+### Live-microphone mode
+
+```bash
+uv run python scripts/live_demo.py --open
+```
+
+This serves a local page on http://127.0.0.1:8765/; only loopback addresses can be bound. After you press **Start listening** and allow the microphone:
+1. The browser sends ordered 100 ms chunks of mono audio at the device rate to this local process.
+2. The process converts them to 16 kHz 16-bit PCM with a documented deterministic resampler.
+3. It runs the existing `kw10-streaming-v1` engine on the pinned, parity-verified ONNX export.
+
+Each window shows its label, confidence, timestamp, last-5-window aggregate, a stable indicator, and inference time. **Stop** shows the final decision; **Reset** clears everything. Audio stays in memory on this computer.
+
+The page states that this is a closed-set demo: not general speech recognition, and not production software. See [docs/live-demo.md](docs/live-demo.md) for browser requirements, microphone permissions, the audio contract, and limitations.
 
 ## Reproducing the pipeline
 
