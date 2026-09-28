@@ -124,8 +124,8 @@ def environment_record() -> dict[str, Any]:
             "implementation": platform.python_implementation(),
         },
         "packages": {name: _version(name) for name in ("onnxruntime", "torch", "numpy", "onnx")},
-        "torch_threads": {
-            "intra_op_default": torch.get_num_threads(),
+        "torch_threads_at_capture": {
+            "intra_op": torch.get_num_threads(),
             "inter_op": torch.get_num_interop_threads(),
         },
         "timer": {

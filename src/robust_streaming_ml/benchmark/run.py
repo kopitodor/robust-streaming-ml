@@ -284,6 +284,7 @@ def _run(
     plan: BenchmarkPlan,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     started = time.perf_counter()
+    environment = environment_record()  # before any block changes torch's thread count
     spec = StreamingSpec.from_window(model.window)
     labels = model.labels
     size, hop = spec.window_samples, spec.hop_samples
@@ -315,6 +316,7 @@ def _run(
 
     rows_out: list[list[Any]] = []
     by_config: dict[str, list[list[int]]] = {}
+    torch_threads = torch.get_num_threads()
     for repetition in range(1, plan.repetitions + 1):
         for threads in plan.threads:
             for path in PATHS:
@@ -333,6 +335,7 @@ def _run(
                     [path, threads, repetition, step, plan.warmup + step, ns]
                     for step, ns in enumerate(durations)
                 )
+    torch.set_num_threads(torch_threads)
 
     buffer = io.StringIO()
     writer = csv.writer(buffer, lineterminator="\n")
@@ -385,7 +388,7 @@ def _run(
         "session_options": {
             str(t): session_options_record(intra_op_threads=t) for t in plan.threads
         },
-        "environment": environment_record(),
+        "environment": environment,
         "audio": audio_record,
         "sanity_checks": sanity,
         "results": results,

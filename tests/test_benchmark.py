@@ -14,6 +14,7 @@ from typing import Any
 
 import numpy as np
 import pytest
+import torch
 
 from robust_streaming_ml.benchmark.config import BenchmarkConfig
 from robust_streaming_ml.benchmark.hardware import cpu_info, environment_record, parse_cpuinfo
@@ -191,7 +192,9 @@ def read_timings(path: Path) -> list[dict[str, str]]:
 
 def test_end_to_end_benchmark(bench: BenchSetup) -> None:
     plan = BenchmarkPlan(warmup=2, timed=3, repetitions=2, threads=(1, 2), sanity_windows=2)
+    torch.set_num_threads(3)
     result = bench.run(plan=plan)
+    assert torch.get_num_threads() == 3  # restored after the blocks
     run = result.run.path
     report = json.loads((run / "report.json").read_text(encoding="utf-8"))
     assert report == result.report
@@ -213,6 +216,8 @@ def test_end_to_end_benchmark(bench: BenchSetup) -> None:
     assert report["model"]["export_parity_passed"] is True
     assert report["audio"]["clips"] == 2 and report["audio"]["samples"] == 14400 + 5 * 1600
     assert report["environment"]["cpu"]["logical_cores"] == os.cpu_count()
+    # captured before timing, not after the last PyTorch block (2 threads)
+    assert report["environment"]["torch_threads_at_capture"]["intra_op"] == 3
     assert report["session_options"]["2"]["intra_op_num_threads"] == 2
     assert "not a production SLA" in (run / "report.md").read_text(encoding="utf-8")
 
