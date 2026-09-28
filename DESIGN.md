@@ -19,7 +19,7 @@ Given an audio clip (or microphone-like sequential windows), a local demo will d
 
 ## Data and licensing assumptions
 
-**Selected (planning; not yet downloaded or verified):** Google Speech Commands v2 (`v0.02`), limited to the ten labels `yes, no, up, down, left, right, on, off, stop, go`, with the official validation/test lists. `_silence_` and `_unknown_` are out of scope for the first baseline, so it is a closed-set classifier. See [docs/decisions/0001-dataset-speech-commands-v2.md](docs/decisions/0001-dataset-speech-commands-v2.md) and the [data contract](docs/data-contract.md). Acquisition is blocked until the contract's license and checksum verification fields are filled in from the actual source.
+**Selected, acquired, and verified (2026-09-27):** Google Speech Commands v2 (`v0.02`), limited to the ten labels `yes, no, up, down, left, right, on, off, stop, go`, with the official validation/test lists. `_silence_` and `_unknown_` are out of scope, so it is a closed-set classifier. The archive checksum, the license (CC BY 4.0, with the project owner's sign-off), and the attribution were recorded from the actual download. See [docs/decisions/0001-dataset-speech-commands-v2.md](docs/decisions/0001-dataset-speech-commands-v2.md), the [data contract](docs/data-contract.md), and the [verification record](docs/datasets/speech_commands_v0.02.md).
 
 The general requirements still apply. The dataset must be a publicly accessible speech or audio dataset whose license permits the planned local portfolio use and whose redistribution constraints are respected. Dataset version, source URL, license, attribution requirements, class definition, and acquisition checksum/manifest must be recorded before use. No unsupported, private, ambiguously licensed, or fabricated data is in scope.
 
@@ -49,6 +49,21 @@ All metrics are computed separately for validation and held-out test splits wher
 - Streaming windows yield valid predictions; the exported ONNX model matches the reference protocol within predeclared numerical tolerances.
 - CPU p50/p95 latency is measured under a reproducible documented benchmark protocol.
 - Documentation distinguishes measured results from plans and includes no unsupported claims.
+
+## Status against the acceptance criteria (2026-09-28)
+
+Evidence is in [RESULTS.md](RESULTS.md). Every run below used a clean, committed source tree, and each protocol was committed before its first run.
+
+| Criterion | Status | Evidence and caveats |
+| --- | --- | --- |
+| A single supported dataset is acquired through a documented, reproducible procedure and passes validation | Met | `scripts/acquire_speech_commands.py` (pinned archive SHA-256) and `scripts/build_speech_commands_manifest.py`: validation passed with 0 errors, and the manifest SHA-256 `f811a20d…` is pinned. A second build was byte-identical. |
+| Split manifests are deterministic, disjoint, class-stratified when applicable, and checked for leakage and duplicates | Met, with ADR-001 | The official speaker-based lists are used, so class stratification is not applicable (ADR-001). Splits are disjoint by path, speaker, and content hash. The 1,477 within-split duplicate warnings (640 groups, each from a single speaker) are reported and handled by a declared evaluation policy. Near-duplicates are not detected. |
+| The baseline trains from versioned configuration and a documented seed, producing reloadable artifacts | Met | Run `20260927T210911Z_kw10-cnn-baseline_6c9d6cdf` (seed 1234, deterministic). The versioned checkpoint reloads with `weights_only=True`. |
+| Clean validation/test metrics, a confusion matrix, and calibration outputs come from a repeatable evaluation command | Met | Run `20260927T220409Z_kw10-cnn-baseline-eval_5b44b01a` (`kw10-clean-eval-v1`); a reproducibility re-run gave identical outputs. |
+| Noise, reverberation, resampling, clipping, and codec-artifact evaluations run under explicit, deterministic configurations and report degradation against clean evaluation | Met | Run `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a` (`kw10-robustness-v1`): 15 conditions, per-clip seeds, degradation against the Milestone 4 raw test metrics. The corruptions are synthetic. |
+| Streaming windows yield valid predictions; the exported ONNX model matches the reference protocol within predeclared numerical tolerances | Met | Run `20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b` (`kw10-streaming-v1`, `kw10-onnx-v1`). Parity passed on 39,703 windows (max \|Δlogit\| 1.8e-4 against a 1e-2 tolerance), and streaming decisions equal the clip-level predictions on 4,074/4,074 clips. Streaming was evaluated on isolated clips and artificial concatenations only. |
+| CPU p50/p95 latency is measured under a reproducible documented benchmark protocol | Met | Run `20260928T004340Z_kw10-onnx-latency_1df4024f` (`kw10-latency-v1`), with raw timings retained. It covers one uncontrolled local machine and one run, with no production or real-time claim. The report's `torch_threads` field was mis-captured; this is disclosed, and the timings are unaffected. |
+| Documentation distinguishes measured results from plans and includes no unsupported claims | Met, to the best of the recorded review | RESULTS.md lists only executed commands, run IDs, and verified artifacts, including failures and disclosed issues. The CI workflow has not run on GitHub; only a local CPython 3.10 rehearsal is recorded. |
 
 ## Risks and mitigations
 

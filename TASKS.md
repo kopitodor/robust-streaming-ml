@@ -3,7 +3,7 @@
 ## 1. Repository tooling and test baseline
 
 - [x] Configure package metadata, supported Python versions, formatting, linting, type checking, and test runner.
-  - hatchling package with `py.typed`; `requires-python >= 3.10` (only 3.14.2 verified so far); ruff (format + lint), mypy (strict, pydantic plugin), pytest; `uv.lock` with CPU-only PyTorch index.
+  - hatchling package with `py.typed`; `requires-python >= 3.10` (checks run with CPython 3.14.2; a CPython 3.10 local rehearsal is recorded in RESULTS.md); ruff (format + lint), mypy (strict, pydantic plugin), pytest; `uv.lock` with CPU-only PyTorch index.
 - [x] Add a minimal import test and CI-ready local commands.
   - `tests/test_import.py`; `scripts/check.py` runs all checks and exits non-zero on failure. `scripts/check_dist.py` builds the wheel offline, installs it into an isolated temporary environment with the locked dependencies, and runs the import smoke tests there. No CI workflow file is added yet.
 - [x] Define configuration schema and deterministic seed utility.
@@ -87,4 +87,5 @@
   - Run `20260928T004340Z_kw10-onnx-latency_1df4024f` (commit `95fd765`): ONNX streaming step with 1 thread, p50 2.430 ms and p95 2.707 ms (AMD Ryzen 7 5800H, Windows 11). The PyTorch eager reference was faster (p50 1.953 ms). A diagnostic attributes most ONNX time to the ONNX Runtime `STFT` kernel. Raw timings are kept, and the statistics were independently regenerated. No production or real-time claim; see RESULTS.md.
 - [x] Build the local user-facing demo.
   - `scripts/demo.py`, `demo/`, `configs/kw10_demo.yaml`, `docs/demo.md`: one local WAV is streamed through the pinned, parity-verified ONNX model, with per-window and stream predictions, confidence, the causal aggregate, and timing. There is an optional `kw10-robustness-v1` corruption contrast. It writes a self-contained HTML page (no scripts or external resources) and JSON under `artifacts/demo/`. No new dependency, no server, no upload.
-- [ ] Complete result tables, limitations, reproducibility instructions, and demo walkthrough.
+- [x] Complete result tables, limitations, reproducibility instructions, and demo walkthrough.
+  - RESULTS.md: every milestone's tables, limitations, and commands, including the latency table. README: results at a glance, the pipeline commands in order, and pin and provenance notes. DESIGN.md: acceptance-criteria status. `docs/demo.md`: two walkthrough runs at `f044b20`. CONTRIBUTING.md: the workflow actually followed.

@@ -78,6 +78,36 @@ uv run python scripts/demo.py --list-corruptions
    A file of at most 1 s therefore gives exactly one window, and its decision is the clip-level prediction.
 3. With a corruption, the corrupted samples (float32, on the `int16 / 32768` scale) go through a fresh classifier in the same way.
 
+## Example walkthrough
+
+These are two demo runs executed at commit `f044b20` (clean tree). They are **demo outputs, not results**. Their pages and JSON are in the git-ignored `artifacts/demo/`.
+
+1. **One test clip plus 0 dB noise:**
+
+   ```bash
+   uv run python scripts/demo.py --audio data/raw/speech_commands_v0.02/yes/022cd682_nohash_0.wav --corruption noise --severity snr_0db
+   ```
+
+   - The clip is shorter than 1 s, so the stream has **one window**: the zero-padded clip-level window.
+   - Clean decision: `yes` (confidence 1.000).
+   - With white noise at an achieved SNR of 0.00 dB, the decision is still `yes` (0.999).
+2. **Three test clips in a row, and resampling through 2 kHz:** `left_stop_go.wav` is `left/`, `stop/`, and `go/022cd682_nohash_0.wav` concatenated into a 3.0 s, 48,000-sample local file.
+
+   ```bash
+   uv run python scripts/demo.py --audio artifacts/demo/left_stop_go.wav --corruption resample --severity via_2000hz
+   ```
+
+   - **Windows:** 21, from 0.0 to 3.0 s, every 100 ms, and no final partial window, because 48,000 = 20 × 1,600 + 16,000.
+   - **Clean per-window labels:**
+     - `left` for windows 0–6;
+     - `stop` for windows 7–15;
+     - `up` for windows 16–18;
+     - `go` for windows 19–20.
+   - **The aggregate follows with a lag:** `left` → `stop` from window 9, and `up` from window 18.
+   - **The clean stream decision is `up` (0.502).** It is the mean of the last 5 windows, which straddle the `stop`/`go` boundary. This is the documented limitation of the stream decision for multi-word files; the timeline shows `left`, `stop`, `go`.
+   - **After resampling through 2 kHz:** none of the 21 window labels matched the clean run (mostly `off`, `go`, and `no`), and the stream decision was `off` (0.301). This is consistent with the Milestone 5 result that this is the most damaging condition.
+   - **Timing:** ONNX Runtime took a median of 2.39 ms per window in this run.
+
 ## Limitations
 
 - **Not a result:** demo output describes one file on one machine. Nothing it shows is a measured or reported result.

@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "robust-streaming-ml"
 version = "0.1.0"
-description = "Planning foundation for reproducible streaming audio classification."
+description = "Reproducible streaming keyword classifier: validated data, robustness suite, ONNX export, CPU benchmark."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

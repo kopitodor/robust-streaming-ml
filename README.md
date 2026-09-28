@@ -1,8 +1,27 @@
 # robust-streaming-ml
 
-A portfolio foundation for a reproducible, deployment-oriented streaming audio-classification project. The planned work demonstrates ML and algorithms engineering practices: validated data splits, explainable baselines, controlled robustness testing, and CPU-ready inference.
+A portfolio project: a reproducible, deployment-oriented streaming keyword classifier on Speech Commands v0.02, covering 10 keywords. It demonstrates ML and algorithms engineering practices:
+- validated data splits;
+- a small, documented CNN baseline;
+- calibrated evaluation;
+- controlled robustness testing;
+- streaming-window inference;
+- an ONNX export verified against PyTorch;
+- a documented CPU latency benchmark;
+- a local demo.
 
-This repository intentionally contains no dataset, trained model, measured metric, or performance claim yet. See [DESIGN.md](DESIGN.md) for the bounded proposal and [TASKS.md](TASKS.md) for the delivery plan.
+The repository contains code, tests, protocols, and documentation only. The dataset, checkpoints, ONNX exports, run directories, and demo outputs are generated locally under git-ignored folders. Every measured number is in [RESULTS.md](RESULTS.md), tied to a run directory and a committed protocol. It is not a state-of-the-art, production, or real-time claim. See [DESIGN.md](DESIGN.md) for the design and acceptance status, and [TASKS.md](TASKS.md) for the delivery record.
+
+## Results at a glance
+
+All from RESULTS.md, single model and seed, official test split (4,074 clips, duplicates retained):
+
+| What | Measured |
+| --- | --- |
+| Clean test accuracy / macro F1 (`kw10-clean-eval-v1`) | 0.9639 / 0.9639; NLL 0.1011, ECE 0.0082 (raw) |
+| Largest robustness degradation (`kw10-robustness-v1`) | accuracy drop 0.500 (0.9639 → 0.4639, resample via 2 kHz). Opus at `compression_level` 0.9 and 0.95 changes accuracy by at most 0.002. |
+| ONNX vs PyTorch parity (`kw10-onnx-v1`) | max \|Δlogit\| 1.8e-4 over 39,703 windows (tolerance 1e-2); streaming decision = clip-level prediction on 4,074/4,074 clips |
+| CPU latency (`kw10-latency-v1`, AMD Ryzen 7 5800H, 1 thread) | ONNX streaming step p50 2.43 ms, p95 2.71 ms; the PyTorch eager reference was faster (p50 1.95 ms) |
 
 ## Repository layout
 
@@ -14,7 +33,7 @@ This repository intentionally contains no dataset, trained model, measured metri
 
 ## Environment setup
 
-Requires Python >= 3.10 (declared in `pyproject.toml`). The checks recorded in [RESULTS.md](RESULTS.md) were run with CPython 3.14.2 on Windows; other versions are not yet verified.
+Requires Python >= 3.10 (declared in `pyproject.toml`). The checks and runs recorded in [RESULTS.md](RESULTS.md) used CPython 3.14.2 on Windows, and the full check was also rehearsed locally with CPython 3.10 (see RESULTS.md). The GitHub Actions workflow itself has not run yet. Formal ONNX results require ONNX Runtime 1.30.0, the version locked for Python ≥ 3.11; Python 3.10 locks 1.23.2, which is used only by tests.
 
 With [uv](https://docs.astral.sh/uv/) (recommended; uses the committed `uv.lock`, CPU-only PyTorch wheels, and the `dev` dependency group):
 
@@ -223,6 +242,41 @@ It writes a self-contained HTML page (no scripts or external resources) and a JS
 
 Demo output is not a measured result, and the model has no silence or unknown-word rejection. See [docs/demo.md](docs/demo.md).
 
+## Reproducing the pipeline
+
+Run these in order from the repository root after `uv sync`. Each step fails closed and writes a new git-ignored run directory.
+
+```bash
+uv run python scripts/acquire_speech_commands.py
+uv run python scripts/build_speech_commands_manifest.py
+uv run python scripts/train_baseline.py --config configs/kw10_cnn_baseline.yaml
+uv run python scripts/evaluate_baseline.py --config configs/kw10_cnn_baseline_eval.yaml
+uv run python scripts/evaluate_robustness.py --config configs/kw10_cnn_baseline_robustness.yaml
+uv run python scripts/export_onnx.py --config configs/kw10_cnn_baseline_onnx.yaml
+uv run python scripts/benchmark_latency.py --config configs/kw10_onnx_benchmark.yaml
+uv run python scripts/demo.py --audio path/to/clip.wav
+```
+
+- **Pins:** the committed configs pin the recorded runs' checkpoint and report SHA-256s. After retraining or re-running a step, update the pins in the downstream configs; a pin mismatch is refused, never ignored.
+- **Clean tree:** formal runs need a clean tree and a git revision that `start_run` can resolve.
+- **"Dubious ownership":** in a checkout where git reports this (as in this one), use a process-scoped override rather than global git configuration:
+
+  ```bash
+  GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$(pwd)" uv run python scripts/...
+  ```
+
 ## Status
 
-Milestones 1 (repository tooling) and 2 (dataset acquisition and validation) are complete. Milestones 3 (baseline training), 4 (clean evaluation and calibration, `kw10-clean-eval-v1`), 5 (robustness suite, `kw10-robustness-v1`), and 6 (streaming and ONNX inference, `kw10-streaming-v1` / `kw10-onnx-v1`) are complete; see `RESULTS.md`. Next: Milestone 7 (benchmarking, documentation, and demo) in `TASKS.md`.
+All seven milestones in `TASKS.md` are complete; see `RESULTS.md`:
+1. repository tooling;
+2. dataset acquisition and validation;
+3. baseline training;
+4. clean evaluation and calibration (`kw10-clean-eval-v1`);
+5. robustness suite (`kw10-robustness-v1`);
+6. streaming and ONNX inference (`kw10-streaming-v1` / `kw10-onnx-v1`);
+7. CPU benchmark (`kw10-latency-v1`), documentation, and demo.
+
+Known gaps:
+- the GitHub Actions workflow has not run on GitHub;
+- results cover one model, one seed, one machine, and one runtime version;
+- the model is closed-set, with no silence or unknown-word rejection.
