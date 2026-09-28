@@ -83,6 +83,7 @@
 
 - [x] Define reproducible CPU latency protocol including warm-up, iterations, threads, runtime, and hardware metadata.
   - `docs/benchmark-protocol.md` (`kw10-latency-v1`): the pinned Milestone 6 export on ONNX Runtime 1.30.0 CPU, batch 1, 1 s window and 100 ms hop. Primary path: the streaming step, including feature extraction. 1 and 4 threads; 500 warm-up and 5,000 timed steps × 3 repetitions; `perf_counter_ns`; nearest-rank p50/p95; raw timings kept. Committed before any measurement.
-- [ ] Record p50/p95 per-window latency without extrapolating to production.
+- [x] Record p50/p95 per-window latency without extrapolating to production.
+  - Run `20260928T004340Z_kw10-onnx-latency_1df4024f` (commit `95fd765`): ONNX streaming step with 1 thread, p50 2.430 ms and p95 2.707 ms (AMD Ryzen 7 5800H, Windows 11). The PyTorch eager reference was faster (p50 1.953 ms). A diagnostic attributes most ONNX time to the ONNX Runtime `STFT` kernel. Raw timings are kept, and the statistics were independently regenerated. No production or real-time claim; see RESULTS.md.
 - [ ] Build the local user-facing demo.
 - [ ] Complete result tables, limitations, reproducibility instructions, and demo walkthrough.

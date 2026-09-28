@@ -1,6 +1,6 @@
 # Results
 
-The experiment results table holds the Milestone 4 clean evaluation (protocol `kw10-clean-eval-v1`, docs/evaluation-protocol.md). The robustness table holds Milestone 5 (protocol `kw10-robustness-v1`, docs/robustness-protocol.md). Milestone 6 streaming and ONNX parity results (protocols `kw10-streaming-v1` and `kw10-onnx-v1`, docs/streaming-onnx-protocol.md) are in their own section below. The latency table stays empty until its protocol runs.
+The experiment results table holds the Milestone 4 clean evaluation (protocol `kw10-clean-eval-v1`, docs/evaluation-protocol.md). The robustness table holds Milestone 5 (protocol `kw10-robustness-v1`, docs/robustness-protocol.md). Milestone 6 streaming and ONNX parity results (protocols `kw10-streaming-v1` and `kw10-onnx-v1`, docs/streaming-onnx-protocol.md) are in their own section below. The latency table holds the Milestone 7 CPU benchmark (protocol `kw10-latency-v1`, docs/benchmark-protocol.md); details are in its section below.
 
 ## Repository check log
 
@@ -60,8 +60,13 @@ Observation (superseded by the review-fix rows below): with the Milestone 1 code
 ## Latency measurements
 
 | Run ID | Model/runtime | CPU/hardware | OS | Threads | Window/hop | Warm-up | Timed iterations | Batch size | p50 ms | p95 ms | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| | | | | | | | | | | | |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `20260928T004340Z_kw10-onnx-latency_1df4024f` | ONNX export `e1db0406…9e8b` (from `d21f8928…d267e`); ONNX Runtime 1.30.0 CPUExecutionProvider | AMD Ryzen 7 5800H, 8 physical / 16 logical cores, nominal 3,194 MHz | Windows 11 (10.0.26200), CPython 3.14.2 | 1 intra-op (1 inter-op) | 1 s / 100 ms (16,000 / 1,600 samples) | 500 per block | 5,000 × 3 repetitions (15,000 pooled) | 1 | 2.430 | 2.707 | **Primary.** ONNX streaming step: push → window → inference (feature extraction included) → softmax → aggregate; nearest rank; local, uncontrolled machine; no real-time claim |
+| `20260928T004340Z_kw10-onnx-latency_1df4024f` | ONNX export `e1db0406…9e8b` (from `d21f8928…d267e`); ONNX Runtime 1.30.0 CPUExecutionProvider | AMD Ryzen 7 5800H, 8 physical / 16 logical cores, nominal 3,194 MHz | Windows 11 (10.0.26200), CPython 3.14.2 | 1 intra-op (1 inter-op) | 1 s / 100 ms (16,000 / 1,600 samples) | 500 per block | 5,000 × 3 repetitions (15,000 pooled) | 1 | 2.314 | 2.523 | `session.run` alone (feature extraction included, no streaming bookkeeping); nearest rank; local, uncontrolled machine; no real-time claim |
+| `20260928T004340Z_kw10-onnx-latency_1df4024f` | PyTorch 2.14.0+cpu eager reference (checkpoint `d21f8928…d267e`); not the export | AMD Ryzen 7 5800H, 8 physical / 16 logical cores, nominal 3,194 MHz | Windows 11 (10.0.26200), CPython 3.14.2 | 1 intra-op (1 inter-op) | 1 s / 100 ms (16,000 / 1,600 samples) | 500 per block | 5,000 × 3 repetitions (15,000 pooled) | 1 | 1.953 | 2.441 | PyTorch eager streaming step; reference only; nearest rank; local, uncontrolled machine; no real-time claim |
+| `20260928T004340Z_kw10-onnx-latency_1df4024f` | ONNX export `e1db0406…9e8b` (from `d21f8928…d267e`); ONNX Runtime 1.30.0 CPUExecutionProvider | AMD Ryzen 7 5800H, 8 physical / 16 logical cores, nominal 3,194 MHz | Windows 11 (10.0.26200), CPython 3.14.2 | 4 intra-op (1 inter-op) | 1 s / 100 ms (16,000 / 1,600 samples) | 500 per block | 5,000 × 3 repetitions (15,000 pooled) | 1 | 2.515 | 3.056 | ONNX streaming step; nearest rank; local, uncontrolled machine; no real-time claim |
+| `20260928T004340Z_kw10-onnx-latency_1df4024f` | ONNX export `e1db0406…9e8b` (from `d21f8928…d267e`); ONNX Runtime 1.30.0 CPUExecutionProvider | AMD Ryzen 7 5800H, 8 physical / 16 logical cores, nominal 3,194 MHz | Windows 11 (10.0.26200), CPython 3.14.2 | 4 intra-op (1 inter-op) | 1 s / 100 ms (16,000 / 1,600 samples) | 500 per block | 5,000 × 3 repetitions (15,000 pooled) | 1 | 2.419 | 2.958 | `session.run` alone; nearest rank; local, uncontrolled machine; no real-time claim |
+| `20260928T004340Z_kw10-onnx-latency_1df4024f` | PyTorch 2.14.0+cpu eager reference (checkpoint `d21f8928…d267e`); not the export | AMD Ryzen 7 5800H, 8 physical / 16 logical cores, nominal 3,194 MHz | Windows 11 (10.0.26200), CPython 3.14.2 | 4 intra-op (1 inter-op) | 1 s / 100 ms (16,000 / 1,600 samples) | 500 per block | 5,000 × 3 repetitions (15,000 pooled) | 1 | 1.410 | 1.896 | PyTorch eager streaming step; reference only; nearest rank; local, uncontrolled machine; no real-time claim |
 
 ### Provenance source lock and distribution check
 
@@ -357,3 +362,78 @@ These are training records, not evaluation results. The validation loss and accu
 | 2026-09-28 | 6 | `uv run python scripts/export_onnx.py --config configs/kw10_cnn_baseline_onnx.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` at the checkpoint-provenance gate; no run directory created |
 | 2026-09-28 | 6 | Same command with process-scoped `safe.directory` at clean commit `978a012` | Exit 0 in 203 s; run `20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b`; parity passed |
 | 2026-09-28 | 6 | Independent verification script (outside the package's run code) | All checks passed: <ul><li>all 7 artifact hashes matched;</li><li>the model reloaded with every expectation;</li><li>a re-export from the checkpoint was byte-identical;</li><li>every set A and set B parity statistic, aggregate, and consistency count regenerated identically from the CSVs;</li><li>window counts matched the protocol formula;</li><li>all 4,074 source test files re-hashed unchanged;</li><li>100 sampled clip windows and 100 sampled stream windows, recomputed from source audio with fresh ONNX Runtime and PyTorch backends, gave identical logits.</li></ul> |
+
+## CPU latency benchmark (Milestone 7)
+
+**Protocol** `kw10-latency-v1` ([docs/benchmark-protocol.md](docs/benchmark-protocol.md)) was committed at `52ea06e`, and its implementation at `95fd765`, both before any latency measurement.
+
+**Run** `20260928T004340Z_kw10-onnx-latency_1df4024f`:
+- clean commit `95fd765`; 230 s wall time;
+- the protocol plan: 500 warm-up and 5,000 timed steps per block, 3 repetitions, interleaved `repetition → threads → path`, with a fresh session or classifier per block.
+
+**Model and runtime:**
+- the Milestone 6 export `e1db0406…9e8b`, from run `20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b`, whose export report `7fddcac2…fa60` is pinned and records passed parity; checkpoint `d21f8928…d267e`;
+- ONNX Runtime 1.30.0 on `CPUExecutionProvider`, with `ORT_ENABLE_ALL`, sequential execution, and 1 inter-op thread;
+- PyTorch 2.14.0+cpu for the reference path; batch size 1; window 16,000 and hop 1,600 samples.
+
+**Machine** (recorded by the run):
+- AMD Ryzen 7 5800H with Radeon Graphics: nominal 3,194 MHz; 8 physical cores (`GetLogicalProcessorInformationEx`) and 16 logical cores;
+- Windows 11 (`Windows-11-10.0.26200-SP0`); CPython 3.14.2; numpy 2.5.3;
+- timer `time.perf_counter_ns` (QueryPerformanceCounter, resolution 1e-7 s);
+- no CPU affinity, normal priority, garbage collector enabled; power plan and background load not controlled.
+
+**Audio:** the first 562 official test clips in manifest order (`down/022cd682_nohash_0.wav` … `go/7bae88ed_nohash_0.wav`), concatenated into 8,814,400 samples (550.9 s). Every block sees the same 5,500 windows.
+
+**Sanity checks (before timing):**
+- ONNX streaming logits for the first 20 windows were bit-identical to ONNX Runtime on the offline windows;
+- they agreed with PyTorch to max |Δlogit| 1.6e-5, within the `kw10-onnx-v1` tolerances;
+- every timed step emitted exactly one window.
+
+**Results** (per-window latency in ms, nearest-rank percentiles over 15,000 pooled timed steps; the primary configuration is the ONNX streaming step with 1 thread):
+
+| Path | Threads | p50 | p95 | p99 | mean | min | max | Per-repetition p50 / p95 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| **ONNX streaming step** (primary; feature extraction included) | 1 | **2.430** | **2.707** | 2.958 | 2.468 | 2.276 | 3.914 | 2.420 / 2.677; 2.434 / 2.716; 2.435 / 2.719 |
+| ONNX `session.run` alone | 1 | 2.314 | 2.523 | 2.748 | 2.338 | 2.178 | 3.630 | 2.311 / 2.518; 2.317 / 2.528; 2.313 / 2.518 |
+| PyTorch eager streaming step (reference) | 1 | 1.953 | 2.441 | 2.715 | 2.038 | 1.741 | 3.855 | 1.942 / 2.443; 1.965 / 2.459; 1.952 / 2.428 |
+| ONNX streaming step | 4 | 2.515 | 3.056 | 3.261 | 2.568 | 2.287 | 3.896 | 2.485 / 2.972; 2.520 / 3.092; 2.541 / 3.071 |
+| ONNX `session.run` alone | 4 | 2.419 | 2.958 | 3.128 | 2.473 | 2.183 | 3.696 | 2.425 / 2.982; 2.413 / 2.941; 2.420 / 2.934 |
+| PyTorch eager streaming step (reference) | 4 | 1.410 | 1.896 | 2.095 | 1.474 | 1.196 | 2.563 | 1.424 / 1.908; 1.404 / 1.911; 1.405 / 1.871 |
+
+**Reading the results:**
+- **Streaming overhead:** the primary path (the whole streaming step) took a median of 2.43 ms per 100 ms hop on this machine. Its p50 is about 0.12 ms above `session.run` alone (2.430 vs 2.314 ms); that is the cost of the bookkeeping (chunk conversion, buffering, window copy, softmax, aggregation).
+- **PyTorch was faster than the ONNX export** in both thread settings, as measured: p50 1.95 vs 2.43 ms with 1 thread, and 1.41 vs 2.52 ms with 4 threads. The comparison is between two local paths; it is not a statement about optimised deployments of either.
+- **Threads:** 4 intra-op threads did not reduce ONNX Runtime latency (p50 2.43 → 2.52 ms); they did reduce PyTorch latency (1.95 → 1.41 ms).
+- **Spread:** the three repetitions agree within 0.06 ms at p50 and 0.12 ms at p95 for every configuration. The widest spreads are both from the 4-thread ONNX streaming step.
+- **No real-time or production claim** is made from these numbers.
+
+**Diagnostic, not part of `kw10-latency-v1`:** an operator profile on synthetic windows, 1 thread, looked at where the ONNX time goes.
+- ONNX Runtime's `STFT` kernel accounted for 81% of kernel time (about 2.0 ms per window). The exported CNN's `Conv` kernels took about 0.25 ms.
+- In PyTorch, the FFT (`aten::_fft_r2c`) took about 0.06 ms, and pooling and convolution dominated.
+
+So the export's in-graph STFT is the bottleneck on this runtime. Expressing the front end differently, or computing features outside ONNX Runtime, might reduce it. That would need a new protocol version and a new parity run, and **was not done**.
+
+**Recording issue (disclosed):** `report.json` field `environment.torch_threads.intra_op_default` reads 4. The environment was captured *after* the timing blocks, when the last PyTorch block had set 4 threads. The process default at run start was 8, as recorded by `start_run` in `metadata.json`. The per-configuration thread counts used for timing are recorded correctly in `timings.csv` and in the result keys. The timings are unaffected. Commit `1d1f800` fixed the code afterwards to capture the environment before timing; this run was not re-run or edited.
+
+**Limitations:**
+- One laptop, with uncontrolled power, thermal, and background conditions; other machines and runs will differ.
+- Single stream at batch 1, including Python-level overhead.
+- Audio I/O, decoding, and model loading are excluded.
+- The PyTorch path is an unoptimised eager reference.
+- One ONNX Runtime version.
+- This is not a production service-level agreement and not a real-time claim.
+
+**Artifacts** are under the git-ignored `runs/20260928T004340Z_kw10-onnx-latency_1df4024f/`:
+- `timings.csv`: all 90,000 timed steps, raw nanoseconds;
+- `report.json`: statistics, environment, sanity checks, and plan;
+- `report.md` and `summary.json`.
+
+### Commands (Milestone 7 benchmark)
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-28 | 7 | `uv run python scripts/check.py` on the tree committed as `95fd765` (Milestone 2 integration test included) | Format: 97 files; lint passed; mypy: no issues in 80 files; pytest: 555 passed; dist: 44-file wheel, 4 smoke tests passed; exit 0 |
+| 2026-09-28 | 7 | `uv run python scripts/benchmark_latency.py --config configs/kw10_onnx_benchmark.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` at the checkpoint-provenance gate; no run directory created |
+| 2026-09-28 | 7 | Same command with process-scoped `safe.directory` at clean commit `95fd765` | Exit 0 in 230 s; run `20260928T004340Z_kw10-onnx-latency_1df4024f`; values as above |
+| 2026-09-28 | 7 | Independent verification script (outside the package's run code) | All checks passed: <ul><li>artifact hashes matched;</li><li>the export pins matched the Milestone 6 files;</li><li>the plan equals the protocol;</li><li>90,000 rows, in the interleaved block order, each block holding windows 500–5,499;</li><li>every pooled and per-repetition statistic regenerated identically with an independent nearest-rank implementation.</li></ul> |
+| 2026-09-28 | 7 | Diagnostic operator profile (ONNX Runtime profiling and `torch.profiler`), synthetic windows, 1 thread; not a protocol measurement | ONNX Runtime `STFT` 81.1% of kernel time (about 2.0 ms/run), `Conv` 9.9%. PyTorch `aten::_fft_r2c` about 0.06 ms/run; max-pool and convolution dominate PyTorch self time. |
