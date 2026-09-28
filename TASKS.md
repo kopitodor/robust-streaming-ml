@@ -73,8 +73,11 @@
 - [x] Implement streaming-window inference and tests for boundaries.
   - `streaming/windowing.py` (windower and an independent offline reference) and `streaming/classifier.py` (batch-1 prediction, causal aggregation, PyTorch backend).
   - `tests/test_streaming.py` covers window and hop boundaries, arbitrary chunkings (bit-identical to offline), startup and final padding, short and empty audio, reset, timestamps and order, and independence from future audio.
-- [ ] Export ONNX with recorded opset and input contract.
-- [ ] Compare ONNX and PyTorch outputs using fixed fixtures.
+- [x] Export ONNX with recorded opset and input contract.
+  - `export/onnx_model.py`: opset 18; `waveform [batch, 16000]` → `logits [batch, 10]`; `metadata_props` and a sidecar tie the model to the checkpoint, labels, features, manifest, source, and toolchain. The loader fails closed.
+  - Run `20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b` (commit `978a012`): model SHA-256 `e1db0406…9e8b`, exported twice with identical bytes.
+- [x] Compare ONNX and PyTorch outputs using fixed fixtures.
+  - Fixed synthetic fixtures in `tests/test_onnx_export.py`. On real test audio (the same run), 4,074 clip windows and 35,629 streaming windows passed the predeclared tolerances: max |Δlogit| 1.8e-4, max |Δprob| 3.6e-5, no top-1 flips. The stream decisions agree with Milestone 4 on 4,074/4,074 clips. See RESULTS.md.
 
 ## 7. Benchmarking, documentation, and demo
 

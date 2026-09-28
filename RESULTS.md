@@ -1,6 +1,6 @@
 # Results
 
-The experiment results table holds the Milestone 4 clean evaluation (protocol `kw10-clean-eval-v1`, docs/evaluation-protocol.md). The robustness table holds Milestone 5 (protocol `kw10-robustness-v1`, docs/robustness-protocol.md). The latency table stays empty until its protocol runs.
+The experiment results table holds the Milestone 4 clean evaluation (protocol `kw10-clean-eval-v1`, docs/evaluation-protocol.md). The robustness table holds Milestone 5 (protocol `kw10-robustness-v1`, docs/robustness-protocol.md). Milestone 6 streaming and ONNX parity results (protocols `kw10-streaming-v1` and `kw10-onnx-v1`, docs/streaming-onnx-protocol.md) are in their own section below. The latency table stays empty until its protocol runs.
 
 ## Repository check log
 
@@ -285,3 +285,75 @@ These are training records, not evaluation results. The validation loss and accu
 | 2026-09-28 | 5 | `uv run python scripts/evaluate_robustness.py --config configs/kw10_cnn_baseline_robustness.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` at the checkpoint-provenance gate; no run directory created |
 | 2026-09-28 | 5 | Same command with process-scoped `safe.directory` at clean commit `e024ee8` | Exit 0 in 5 min 29 s; run `20260927T223417Z_kw10-cnn-baseline-robustness_6cf68b9a`; 15 conditions completed |
 | 2026-09-28 | 5 | Independent verification script (outside the package) | All 30 artifact hashes matched. All 4,074 source test files re-hashed unchanged. Every condition's metrics and degradation regenerated identically from its predictions file. For 25 random clips per condition, the corruption recomputed from source matched the recorded seed and output SHA-256. |
+
+## Streaming and ONNX (Milestone 6)
+
+**Protocols** `kw10-streaming-v1` and `kw10-onnx-v1` ([docs/streaming-onnx-protocol.md](docs/streaming-onnx-protocol.md)) were committed at `15797c9`, and their implementation at `978a012`, both before any real-data export or parity run. The tolerances were sized from synthetic probes only (commands below).
+
+**Run** `20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b`:
+- clean commit `978a012`; 203 s wall time (195 s inside the run);
+- checkpoint `d21f8928…d267e` (the Milestone 4 and 5 checkpoint, unchanged; no retraining, tuning, or recalibration);
+- manifest `f811a20d…ab6131c`; official test split, 4,074 rows.
+
+**Toolchain and runtime** (pinned and checked):
+- export: torch 2.14.0+cpu, onnx 1.23.0, onnxscript 0.7.2 (dynamo exporter);
+- inference: ONNX Runtime 1.30.0 on `CPUExecutionProvider` only, with `ORT_ENABLE_ALL`, sequential execution, and 1 intra-op and 1 inter-op thread;
+- PyTorch reference: 8 torch threads.
+
+**Exported model:** `onnx/model.onnx`, SHA-256 `e1db0406461abb4649cd6ab36a76b2369067402a19ef2d80823825a9b0ea9e8b`, 341,090 bytes.
+- **Graph:** opset 18 (default domain only), IR version 10, 31 nodes, 29 initializers. Operators: `Add`, `BatchNormalization`, `Conv`, `Gather`, `Gemm`, `Log`, `MatMul`, `MaxPool`, `Pad`, `Pow`, `ReduceMean`, `Relu`, `Reshape`, `STFT`, `Transpose`, `Unsqueeze`.
+- **Contract:** `waveform` float32 `[batch, 16000]` → `logits` float32 `[batch, 10]`.
+- **Determinism:** exported twice in the run with identical bytes. The independent check re-exported it from the checkpoint and also got identical bytes.
+- **Metadata** records the checkpoint SHA-256, labels, feature fingerprint, manifest, source `978a012` (clean), and toolchain.
+
+**Clean-path gate:** the PyTorch path (batch size 256) reproduced all 4,074 Milestone 4 raw test logits bit-for-bit.
+
+**Parity** (ONNX Runtime vs PyTorch, both one window at a time; tolerances: logits 1e-2, probabilities 1e-3, aggregates 1e-3):
+
+| Set | Streams | Windows | max \|Δ logit\| | mean \|Δ logit\| | max \|Δ probability\| | max \|Δ aggregate\| | Top-1 flips (near-tie) | Violations | Passed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| A: each test clip as a stream | 4,074 | 4,074 | 1.507e-4 | 5.57e-6 | 1.16e-5 | 1.16e-5 | 0 (0) | 0 | yes |
+| B: concatenations of 8 consecutive test clips | 510 | 35,629 | 1.764e-4 | 5.19e-6 | 3.61e-5 | 1.37e-5 | 0 (0) | 0 | yes |
+
+- The largest logit difference is about 57 times below the logit tolerance, and the largest probability difference about 28 times below the probability tolerance.
+- Set B pushed its audio in 22,311 seeded chunks. It produced 177 final partial windows, and every streamed window was bit-identical to the offline reference windows. In set A, every clip yielded exactly one window, bit-identical to its Milestone 4 clip window.
+
+**Streaming consistency** (set A, all 4,074 test clips; stream decision vs the Milestone 4 clip-level prediction):
+
+| Path | Agreement with Milestone 4 | Accuracy (correct) |
+| --- | ---: | ---: |
+| ONNX Runtime streaming, batch 1 | 4,074 / 4,074 (1.0000) | 0.9639 (3,927) |
+| PyTorch streaming, batch 1 | 4,074 / 4,074 (1.0000) | 0.9639 (3,927) |
+| Milestone 4 clip-level, batch 256 | n/a | 0.9639 (3,927) |
+
+- The PyTorch batch-1 logits differ from the Milestone 4 batch-256 logits by up to 9.5e-6. This is the batch-size dependence noted in the protocol. No decision changed.
+
+**Failures and non-runs:** none. No tolerance was violated and no gate failed in the formal run.
+
+**Limitations:**
+- Parity was measured on clean test audio only. Corrupted audio is covered only by synthetic probes and tests.
+- Speech Commands clips are isolated utterances of at most 1 s, so every clip-as-stream has exactly one window. That makes the 100% streaming consistency a check that the streaming path reproduces the clip protocol, not a measurement of continuous-audio behaviour. The multi-window streams (set B) are artificial concatenations with no per-window ground truth, so they are used for numerical parity only.
+- The results are for one model, one runtime version (ONNX Runtime 1.30.0), and one platform: Windows 11, CPython 3.14.2, AMD Ryzen 7 5800H. The CI environment locks ONNX Runtime 1.23.2 on Python 3.10, which has only been exercised by the synthetic tests.
+- Closed set: every window gets one of the 10 labels. There is no silence or unknown-word rejection.
+- No latency was measured in this milestone.
+
+**Artifacts** are under the git-ignored `runs/20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b/`:
+- `onnx/model.onnx` and `onnx/model.onnx.json`;
+- `parity/clips.csv` (per test clip: labels, Milestone 4 prediction, PyTorch and ONNX logits, both stream decisions);
+- `parity/stream_windows.csv` (per set-B window: timestamps and both backends' logits) and `parity/streams.csv`;
+- `report.json`, `report.md`, and `summary.json`.
+
+### Commands (Milestone 6)
+
+| Date | Milestone | Command | Outcome |
+| --- | --- | --- | --- |
+| 2026-09-28 | 6 | `uv pip compile` for `onnx`, `onnxruntime`, `onnxscript` targeting CPython 3.14 on Windows and CPython 3.10 on Linux | Resolved onnx 1.23.0, onnxscript 0.7.2, and onnxruntime 1.30.0 (Windows, Python 3.14) or 1.23.2 (Linux, Python 3.10) |
+| 2026-09-28 | 6 | Export probe on synthetic signals, random weights, in an ephemeral `uv run --with …` environment (the project environment was not modified) | The legacy TorchScript exporter failed ("STFT does not currently support complex types"). The dynamo exporter exported `torch.stft` as ONNX `STFT` at opset 18. It first failed on a cp1252 console printing a ✅; that did not recur with `verbose=False`. ONNX Runtime matched PyTorch to 3.9e-7 on the logits. |
+| 2026-09-28 | 6 | Tolerance-sizing probes: pinned checkpoint weights on synthetic signals only (tones, noise, bursts, band-limited, and all 15 `kw10-robustness-v1` corruptions of synthetic clips); no dataset audio | Export bytes identical across two exports. ONNX vs PyTorch max \|Δlogit\| 1.7e-3 and \|Δprob\| 2.7e-4 on pure tones; at most 1.3e-4 and 1.2e-5 on speech-like, band-limited, and corrupted signals; top-1 always agreed. PyTorch batch 1 vs 64 differed by up to 9.5e-6. These set the tolerances (1e-2, 1e-3). |
+| 2026-09-28 | 6 | `uv add "onnx>=1.23" "onnxruntime>=1.23" "onnxscript>=0.7"` | Locked onnx 1.23.0, onnxscript 0.7.2, onnx-ir 1.0.0, protobuf 7.36.2, ml-dtypes 0.6.0, flatbuffers, and onnxruntime 1.30.0 (Python ≥ 3.11). The lock picked onnxruntime 1.24.3 for Python 3.10, which has **no cp310 wheels**. |
+| 2026-09-28 | 6 | `[tool.uv] required-environments` (Linux and Windows x86-64), then `uv lock --upgrade-package onnxruntime` | Did not help: 1.24.3 was still selected for Python < 3.11. The setting was removed. |
+| 2026-09-28 | 6 | Marker-split dependency (`onnxruntime>=1.23,<1.24; python_version < '3.11'`) and `uv lock` | onnxruntime 1.23.2 (cp310 wheels for Linux, Windows, and macOS) for Python 3.10, and 1.30.0 otherwise. A lockfile scan found a CPython 3.10 Linux x86-64 artifact for every package; the only package flagged was the macOS-only torch build. |
+| 2026-09-28 | 6 | `uv run python scripts/check.py` on the tree committed as `978a012` (Milestone 2 integration test included) | Format: 88 files; lint passed; mypy: no issues in 72 files; pytest: 534 passed; dist: 39-file wheel, 4 smoke tests passed in the isolated environment; exit 0 |
+| 2026-09-28 | 6 | `uv run python scripts/export_onnx.py --config configs/kw10_cnn_baseline_onnx.yaml` (git refuses this checkout) | Exit 1: `ProvenanceError` at the checkpoint-provenance gate; no run directory created |
+| 2026-09-28 | 6 | Same command with process-scoped `safe.directory` at clean commit `978a012` | Exit 0 in 203 s; run `20260928T002359Z_kw10-cnn-baseline-onnx_7da9328b`; parity passed |
+| 2026-09-28 | 6 | Independent verification script (outside the package's run code) | All checks passed: <ul><li>all 7 artifact hashes matched;</li><li>the model reloaded with every expectation;</li><li>a re-export from the checkpoint was byte-identical;</li><li>every set A and set B parity statistic, aggregate, and consistency count regenerated identically from the CSVs;</li><li>window counts matched the protocol formula;</li><li>all 4,074 source test files re-hashed unchanged;</li><li>100 sampled clip windows and 100 sampled stream windows, recomputed from source audio with fresh ONNX Runtime and PyTorch backends, gave identical logits.</li></ul> |
